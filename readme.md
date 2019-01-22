@@ -10,4 +10,5 @@
     * git clone https://github.com/romulomanzano/falldetection.git ~/github/falldetection
 * Go to that directory and run the setup_pi script:
     * cd ~/github/falldetection
+    * chmod +x setup_pi.sh
     * ./setup_pi.sh
