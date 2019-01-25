@@ -1,5 +1,6 @@
 #make sure necessary libraries are there
 sudo apt install libblas-dev llvm
+sudo apt install vim
 sudo apt-get install libatlas-base-dev
 sudo /bin/dd if=/dev/zero of=/var/swap.1 bs=1M count=1024
 sudo /sbin/mkswap /var/swap.1
