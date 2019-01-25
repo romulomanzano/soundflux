@@ -12,10 +12,10 @@ sudo pip3 install virtualenv
 mkdir ~/github/python_environments
 mkdir ~/github/python_environments/falldetection
 #create python virtual environment
-python3 -m venv ~/github/python_environments/falldetection --without-pip
+python3 -m venv ~/github/python_environments/falldetection
 source ~/github/python_environments/falldetection/bin/activate
 #install requirements
-pip3 install -r requirements.txt --user
+pip3 install -r requirements.txt
 #Revert extra swap
 sudo swapoff /var/swap.1
 sudo rm /var/swap.1

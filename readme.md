@@ -12,3 +12,5 @@
     * cd ~/github/falldetection
     * chmod +x setup_pi.sh
     * ./setup_pi.sh
+ * If you have the ReSpeaker 4, go to this link and configure it:
+    * http://wiki.seeedstudio.com/ReSpeaker_4_Mic_Array_for_Raspberry_Pi/
