@@ -4,6 +4,7 @@ sudo apt-get install libasound2
 sudo apt-get install libasound2-dev
 sudo apt install libblas-dev llvm
 sudo apt install vim
+sudo apt-get install sox
 sudo apt-get install libatlas-base-dev
 #install virtualenv
 sudo pip3 install virtualenv
