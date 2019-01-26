@@ -3,8 +3,8 @@ Core class to manage audio recordings
 """
 from config import *
 import timeit
-import time
 import sys
+import wave
 
 
 class SoundFlux(object):
@@ -22,13 +22,19 @@ class SoundFlux(object):
 
     def record_x_seconds(self,output_file, seconds=4):
         start = timeit.default_timer()
-        f = open(output_file, 'wb')
-        while (start - timeit.default_timer()) <= seconds:
+        frames = []
+        while (timeit.default_timer() - start) <= seconds:
             # Read data from device
-            l, data = self.recorder.read()
-            if l:
-                f.write(data)
-                time.sleep(.001)
+             l, data = self.recorder.read()
+             if l:
+                frames.append(data)
+        #set the metadata for the file
+        # Write your new .wav file with built in Python 3 Wave module
+        with wave.open(output_file, 'wb') as wave_file:
+           wave_file.setnchannels(MIC_NUMBER_OF_CHANNELS)
+           wave_file.setsampwidth(TARGET_FILE_SAMPLE_WIDTH)
+           wave_file.setframerate(MIC_RATE)
+           wave_file.writeframes(b''.join(frames))
 
 
 if __name__ == '__main__':
