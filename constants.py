@@ -1,1 +1,2 @@
 FEED_FILENAME_SUFFIX = "sound_feed.wav"
+FEED_FILE_LENGTH = 10

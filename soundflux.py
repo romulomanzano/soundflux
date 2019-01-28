@@ -27,7 +27,7 @@ class SoundFlux(object):
         self.recorder.setformat(MIC_SET_FORMAT)
         self.recorder.setperiodsize(MIC_PERIOD_SIZE)
 
-    def record_x_seconds(self,output_file, seconds=4):
+    def record_x_seconds(self,output_file, seconds=constants.FEED_FILE_LENGTH):
         start = timeit.default_timer()
         frames = []
         while (timeit.default_timer() - start) <= seconds:
@@ -43,11 +43,7 @@ class SoundFlux(object):
            wave_file.setframerate(MIC_RATE)
            wave_file.writeframes(b''.join(frames))
 
-    def _generate_feed_filename(self,timestamp,directory=FEED_FILES_FOLDER):
-        file_name = timestamp.strftime(FEED_FILES_PREFIX_FORMAT)+"-"+constants.FEED_FILENAME_SUFFIX
-        return directory+file_name
-
-    def capture_live_feed(self,output_directory=FEED_FILES_FOLDER,chunk_size=4):
+    def capture_live_feed(self,output_directory=FEED_FILES_FOLDER,chunk_size=constants.FEED_FILE_LENGTH):
         """
         This function will enable continuous recording through the device, while writing to smaller files
         of x number of seconds
@@ -57,13 +53,9 @@ class SoundFlux(object):
         """
         while True:
             now = datetime.datetime.utcnow()
-            file_name = self._generate_feed_filename(now, output_directory)
+            file_name = self._generate_feed_filename(now, output_directory,chunk_size=chunk_size)
             self.record_x_seconds(file_name,seconds=chunk_size)
 
-    def get_available_feed_files(self,directory=FEED_FILES_FOLDER):
-        files = utils.get_files_with_mtime(directory,file_extension='.wav')
-        self.logger("{} files found.".format(len(files)))
-        return files
 
 if __name__ == '__main__':
     action = sys.argv[1]
