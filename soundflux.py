@@ -5,9 +5,16 @@ from config import *
 import timeit
 import sys
 import wave
+import datetime
+import constants
+import utils
 
-
+@utils.logged
 class SoundFlux(object):
+    """
+    This will act as a wrapper on the alsaaudio PCM class.
+    It may have ore or more PCM attributes (recording and player)
+    """
 
     def __init__(self):
         self.recorder = alsaaudio.PCM(alsaaudio.PCM_CAPTURE, alsaaudio.PCM_NONBLOCK, device=MIC_DEVICE)
@@ -36,6 +43,27 @@ class SoundFlux(object):
            wave_file.setframerate(MIC_RATE)
            wave_file.writeframes(b''.join(frames))
 
+    def _generate_feed_filename(self,timestamp,directory=FEED_FILES_FOLDER):
+        file_name = timestamp.strftime()+"-"+constants.FEED_FILENAME_SUFFIX
+        return directory+file_name
+
+    def capture_live_feed(self,output_directory=FEED_FILES_FOLDER,chunk_size=4):
+        """
+        This function will enable continuous recording through the device, while writing to smaller files
+        of x number of seconds
+        :param output_directory: Where the files should go, include slash
+        :param chunk_size: Number of seconds per file captured
+        :return: None
+        """
+        while True:
+            now = datetime.datetime.utcnow()
+            file_name = self._generate_feed_filename(now, output_directory)
+            self.record_x_seconds(file_name,seconds=chunk_size)
+
+    def get_available_feed_files(self,directory=FEED_FILES_FOLDER):
+        files = utils.get_files_with_mtime(directory,file_extension='.wav')
+        self.logger("{} files found.".format(len(files)))
+        return files
 
 if __name__ == '__main__':
     action = sys.argv[1]
@@ -43,3 +71,9 @@ if __name__ == '__main__':
         file_name = sys.argv[2]
         flux = SoundFlux()
         flux.record_x_seconds(file_name)
+    if action == 'capture_live_feed':
+        flux = SoundFlux()
+        flux.capture_live_feed()
+    if action == 'get_live_feeds':
+        flux = SoundFlux()
+        flux.get_available_feed_files()
