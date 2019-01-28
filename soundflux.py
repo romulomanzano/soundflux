@@ -44,7 +44,7 @@ class SoundFlux(object):
            wave_file.writeframes(b''.join(frames))
 
     def _generate_feed_filename(self,timestamp,directory=FEED_FILES_FOLDER):
-        file_name = timestamp.strftime()+"-"+constants.FEED_FILENAME_SUFFIX
+        file_name = timestamp.strftime(FEED_FILES_PREFIX_FORMAT)+"-"+constants.FEED_FILENAME_SUFFIX
         return directory+file_name
 
     def capture_live_feed(self,output_directory=FEED_FILES_FOLDER,chunk_size=4):

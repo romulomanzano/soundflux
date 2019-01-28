@@ -12,3 +12,4 @@ MIC_SET_FORMAT = alsaaudio.PCM_FORMAT_S32_LE
 MIC_DEVICE = "ac108"
 MIC_PERIOD_SIZE = 160
 FEED_FILES_FOLDER = os.path.dirname(os.path.realpath(__file__))+"/feed_files/"
+FEED_FILES_PREFIX_FORMAT = "%H:%M:%S.%f"
