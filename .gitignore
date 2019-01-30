@@ -1,3 +1,4 @@
 __pycache__/
 feed_files/*wav
 *.pyc
+.idea/
