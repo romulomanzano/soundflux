@@ -26,6 +26,3 @@ def get_files_with_mtime(path,file_extension):
     # leave only regular files, insert creation date
     entries = ((stat[ST_MTIME], path) for stat, path in entries if file_extension in path)
     return entries
-
-def simple_mfcc_aggregation(mfccs):
-    return np.mean(mfccs, axis=0)
