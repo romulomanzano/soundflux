@@ -11,9 +11,9 @@ sudo apt-get install libatlas-base-dev
 sudo pip3 install virtualenv
 #
 mkdir ~/github/python_environments
-mkdir ~/github/python_environments/falldetection
+mkdir ~/github/python_environments/soundflux
 #create python virtual environment
-python3 -m venv ~/github/python_environments/falldetection
+python3 -m venv ~/github/python_environments/soundflux
 source ~/github/python_environments/falldetection/bin/activate
 #install requirements
 pip3 install -r requirements.txt
