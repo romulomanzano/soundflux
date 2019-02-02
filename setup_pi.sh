@@ -2,6 +2,7 @@
 sudo apt-get install libasound2
 # in ubuntu you may need to install via aptitude and downgrade sudo apt-get install aptitude
 sudo apt-get install libasound2-dev
+sudo apt-get install libhdf5-serial-dev
 sudo apt install libblas-dev llvm
 sudo apt install vim
 sudo apt-get install sox
