@@ -63,3 +63,4 @@ Werkzeug==0.14.1
 h5py
 librosa==0.4.2
 widgetsnbextension==3.4.2
+ijson
