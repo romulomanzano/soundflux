@@ -1,6 +1,5 @@
 from config import *
 import smbus
-import timeit
 import time
 
 class Accelerometer(object):

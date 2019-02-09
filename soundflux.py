@@ -27,7 +27,7 @@ class SoundFlux(object):
         self.recorder.setformat(MIC_SET_FORMAT)
         self.recorder.setperiodsize(MIC_PERIOD_SIZE)
 
-    def record_x_seconds(self,output_file, seconds=constants.FEED_FILE_LENGTH):
+    def record_x_seconds(self, seconds=constants.FEED_FILE_LENGTH):
         start = timeit.default_timer()
         frames = []
         while (timeit.default_timer() - start) <= seconds:
@@ -35,7 +35,10 @@ class SoundFlux(object):
              l, data = self.recorder.read()
              if l:
                 frames.append(data)
-        #set the metadata for the file
+        return frames
+
+    def record_and_save_x_seconds(self,output_file, seconds=constants.FEED_FILE_LENGTH):
+        frames = self.record_x_seconds(seconds=seconds)
         # Write your new .wav file with built in Python 3 Wave module
         with wave.open(output_file, 'wb') as wave_file:
            wave_file.setnchannels(MIC_NUMBER_OF_CHANNELS)
@@ -51,10 +54,11 @@ class SoundFlux(object):
         :param chunk_size: Number of seconds per file captured
         :return: None
         """
+        #TODO: Use threading!
         while True:
             now = datetime.datetime.utcnow()
             file_name = self._generate_feed_filename(now, output_directory,chunk_size=chunk_size)
-            self.record_x_seconds(file_name,seconds=chunk_size)
+            self.record_and_save_x_seconds(file_name,seconds=chunk_size)
 
 
 if __name__ == '__main__':
@@ -62,7 +66,7 @@ if __name__ == '__main__':
     if action == 'record_sample':
         file_name = sys.argv[2]
         flux = SoundFlux()
-        flux.record_x_seconds(file_name)
+        flux.record_and_save_x_seconds(file_name)
     if action == 'capture_live_feed':
         flux = SoundFlux()
         flux.capture_live_feed()
