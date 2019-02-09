@@ -77,7 +77,7 @@ class Accelerometer(object):
         frames = []
         while (timeit.default_timer() - start) <= seconds:
             # Read data from device
-            axis = self.recorder.get_axes(gforce=gforce,apply_scaler=apply_scaler)
+            axis = self.get_axes(gforce=gforce,apply_scaler=apply_scaler)
             frames.append(axis)
             time.sleep(1.0 / sample_frequency_hertz)
         return frames
