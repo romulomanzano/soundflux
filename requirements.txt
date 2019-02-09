@@ -12,3 +12,4 @@ six==1.12.0
 tensorflow
 h5py
 PySoundFile==0.9.0.post1
+librosa==0.4.2
