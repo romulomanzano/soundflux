@@ -10,8 +10,8 @@ class Accelerometer(object):
     def __init__(self, address=0x53):
         self.bus = smbus.SMBus(1)
         self.address = address
-        self.set_bandwidth_rate(ACC_BW_RATE_1600HZ)
-        self.set_range(ACC_RANGE_4G)
+        self.set_bandwidth_rate(ACC_BW_RATE_400HZ)
+        self.set_range(ACC_RANGE_2G)
         self.enable_measurement()
 
     def enable_measurement(self):
@@ -72,12 +72,16 @@ class Accelerometer(object):
 
         return {"x": x, "y": y, "z": z}
 
-    def capture_x_seconds(self,seconds,gforce=True, apply_scaler=True,sample_frequency_hertz=1000):
-        start = timeit.default_timer()
+    def capture_x_seconds(self,seconds,gforce=True, apply_scaler=True,sample_frequency_hertz=500):
+        #TODO: Frequency doesn't really reflect the latency of the device, fix!
         frames = []
-        while (timeit.default_timer() - start) <= seconds:
+        total_frames = seconds * sample_frequency_hertz
+        tic = time.time()
+        while time.time() - tic < seconds:
             # Read data from device
             axis = self.get_axes(gforce=gforce,apply_scaler=apply_scaler)
             frames.append(axis)
             time.sleep(1.0 / sample_frequency_hertz)
+        toc = time.time()
+        print(" Measuremnt time= %.3fs" % ( toc-tic ))
         return frames
