@@ -2,14 +2,14 @@
 
 ## Setup the Pi:
 - Open a terminal (or ssh into your Pi)
-- Create a directory called "/github/falldetection"
+- Create a directory called "/github/soundflux"
     * mkdir ~/github
-    * mkdir ~/github/falldetection
-    * cd ~/github/falldetection
+    * mkdir ~/github/soundflux
+    * cd ~/github/soundflux
 * Clone the git repo into it:
-    * git clone https://github.com/romulomanzano/falldetection.git ~/github/falldetection
+    * git clone https://github.com/romulomanzano/soundflux.git ~/github/soundflux
 * Go to that directory and run the setup_pi script:
-    * cd ~/github/falldetection
+    * cd ~/github/soundflux
     * chmod +x setup_pi.sh
     * ./setup_pi.sh
  * If you have the ReSpeaker 4, go to this link and configure it:

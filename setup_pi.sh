@@ -16,4 +16,5 @@ mkdir ~/github/python_environments/soundflux
 python3 -m venv ~/github/python_environments/soundflux
 source ~/github/python_environments/falldetection/bin/activate
 #install requirements
+pip3 install --upgrade pip
 pip3 install -r requirements.txt
