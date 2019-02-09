@@ -1,16 +1,25 @@
-from python_speech_features import mfcc
-import scipy.io.wavfile as wav
-import sys
+import os,sys,inspect
+currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parentdir = os.path.dirname(currentdir)
+sys.path.insert(0,parentdir) 
+
+
 import smbus
 import time
-
+def warn(*args, **kwargs):
+        pass
+import warnings
+warnings.warn = warn
+import librosa
+import soundfile
+import feature_generation as fg
 
 def test_time_load(file_name='/home/pi/github/falldetection/tests/wav/hello.wav'):
     start = timeit.default_timer()
     #loading
-    (rate,sig) = wav.read(file_name)
-    mfcc_feat = mfcc(sig,rate)
-    print(mfcc_feat[1:3,:])
+    samples, sample_rate = soundfile.read(file_name)
+    features = fg.extract_spectrogram(samples,sample_rate)
+    features.shape
     #time
     stop = timeit.default_timer()
     print('Time with pythonspeech ', stop - start)
