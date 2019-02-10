@@ -42,7 +42,7 @@ class SoundFlux(object):
         # Write your new .wav file with built in Python 3 Wave module
         with wave.open(output_file, 'wb') as wave_file:
            wave_file.setnchannels(MIC_NUMBER_OF_CHANNELS)
-           wave_file.setsampwidth(TARGET_FILE_SAMPLE_WIDTH)
+           wave_file.setsampwidth(seconds)
            wave_file.setframerate(MIC_RATE)
            wave_file.writeframes(b''.join(frames))
 

@@ -74,7 +74,6 @@ class Accelerometer(object):
     def capture_x_seconds(self,seconds,gforce=True, apply_scaler=True,sample_frequency_hertz=500):
         #TODO: Frequency doesn't really reflect the latency of the device, fix!
         frames = []
-        total_frames = seconds * sample_frequency_hertz
         tic = time.time()
         while time.time() - tic < seconds:
             # Read data from device
@@ -82,5 +81,5 @@ class Accelerometer(object):
             frames.append(axis)
             time.sleep(1.0 / sample_frequency_hertz)
         toc = time.time()
-        print(" Measuremnt time= %.3fs" % ( toc-tic ))
+        print(" Measurement time= %.3fs" % ( toc-tic ))
         return frames
