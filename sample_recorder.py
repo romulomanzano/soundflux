@@ -65,9 +65,12 @@ class SampleRecorder(object):
         audio_file_name = "{}.wav".format(base_file_name)
         detail_file_name = "{}_index.json".format(base_file_name)
         vibration_file_name = "{}_vibration.json".format(base_file_name)
-        file_details = {'id': id, 'class': _class_name, 'timestamp': now, 'prefix': prefix,
+        file_details = {'id': id, 'class': _class_name, 
+                        'timestamp': now.strftime("%m/%d/%Y, %H:%M:%S"), 
+                        'prefix': prefix,
                         'audio_file': audio_file_name,
-                        'vibration_file': vibration_file_name, 'index_file': detail_file_name}
+                        'vibration_file': vibration_file_name, 'index_file': detail_file_name,
+                        'sample_length' : self.sample_length}
         # index file
         with open(base_path + detail_file_name, 'w') as fp:
             json.dump(file_details, fp)

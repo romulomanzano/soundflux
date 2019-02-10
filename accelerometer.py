@@ -81,5 +81,4 @@ class Accelerometer(object):
             frames.append(axis)
             time.sleep(1.0 / sample_frequency_hertz)
         toc = time.time()
-        print(" Measurement time= %.3fs" % ( toc-tic ))
         return frames
