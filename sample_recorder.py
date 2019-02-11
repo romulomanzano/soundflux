@@ -57,7 +57,7 @@ class SampleRecorder(object):
         toc = time.time()
         print("Time to finish {}".format(toc - tic))
 
-    def save_sample(self, prefix, _class_name):
+    def save_sample(self, prefix, _class_name, metadata={}):
         base_path = './samples/'
         now = datetime.datetime.utcnow()
         id = str((now - datetime.datetime(1970, 1, 1)).total_seconds())
@@ -70,7 +70,8 @@ class SampleRecorder(object):
                         'prefix': prefix,
                         'audio_file': audio_file_name,
                         'vibration_file': vibration_file_name, 'index_file': detail_file_name,
-                        'sample_length' : self.sample_length}
+                        'sample_length' : self.sample_length,
+                        'metadata': metadata}
         # index file
         with open(base_path + detail_file_name, 'w') as fp:
             json.dump(file_details, fp)
