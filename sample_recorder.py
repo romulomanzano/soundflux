@@ -93,17 +93,18 @@ class SampleRecorder(object):
         return file_details
 
     def plot_sample(self):
-        plt.plot([s['x'] for s in self.sample_vibration])
-        plt.ylabel('X Acceleration')
-        plt.show()
+        if self.sample_vibration:
+            plt.plot([s['x'] for s in self.sample_vibration])
+            plt.ylabel('X Acceleration')
+            plt.show()
 
-        plt.plot([s['y'] for s in self.sample_vibration])
-        plt.ylabel('Y Acceleration')
-        plt.show()
+            plt.plot([s['y'] for s in self.sample_vibration])
+            plt.ylabel('Y Acceleration')
+            plt.show()
 
-        plt.plot([s['z'] for s in self.sample_vibration])
-        plt.ylabel('Z Acceleration')
-        plt.show()
+            plt.plot([s['z'] for s in self.sample_vibration])
+            plt.ylabel('Z Acceleration')
+            plt.show()
 
         plt.plot(list(np.mean(self.get_audio_as_samples(), axis=1)))
         plt.ylabel('Audio')
