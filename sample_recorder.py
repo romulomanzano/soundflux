@@ -39,13 +39,16 @@ class SampleRecorder(object):
     def capture_x_seconds_audio(self, seconds):
         self.sample_audio = self.mic.record_x_seconds(seconds)
 
-    def capture_x_seconds_vibration(self, seconds):
-        self.sample_vibration = self.acc.capture_x_seconds(seconds)
+    def capture_x_seconds_vibration(self, seconds,omit):
+        if not omit:
+            self.sample_vibration = self.acc.capture_x_seconds(seconds)
+        else:
+            self.sample_vibration = None
 
-    def capture_x_seconds(self, seconds, wait=True):
+    def capture_x_seconds(self, seconds, exclude_vibration=False, wait=True):
         self.sample_length = seconds
         mic_thread = Thread(target=self.capture_x_seconds_audio, args=[seconds])
-        acc_thread = Thread(target=self.capture_x_seconds_vibration, args=[seconds])
+        acc_thread = Thread(target=self.capture_x_seconds_vibration, args=[seconds, exclude_vibration])
         mic_thread.daemon = True
         acc_thread.daemon = True
         mic_thread.start()
@@ -75,9 +78,12 @@ class SampleRecorder(object):
         # index file
         with open(base_path + detail_file_name, 'w') as fp:
             json.dump(file_details, fp)
-        # vibration_file
-        with open(base_path + vibration_file_name, 'w') as fp:
-            json.dump(file_details, fp)
+        if self.sample_vibration:
+            # vibration_file
+            with open(base_path + vibration_file_name, 'w') as fp:
+                json.dump(file_details, fp)
+        else:
+            file_details.pop('vibration_file')
         ##Save wav file
         with wave.open(base_path + audio_file_name, 'wb') as wave_file:
             wave_file.setnchannels(MIC_NUMBER_OF_CHANNELS)
