@@ -64,3 +64,4 @@ h5py
 librosa==0.4.2
 widgetsnbextension==3.4.2
 ijson
+twilio

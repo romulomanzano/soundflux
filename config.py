@@ -2,7 +2,12 @@
 General config variables
 """
 import alsaaudio
+from dotenv import load_dotenv, find_dotenv
 import os
+
+# load environment variables
+load_dotenv(find_dotenv())
+
 
 LOG_LEVEL = 'INFO'
 MIC_NUMBER_OF_CHANNELS = 4
@@ -36,3 +41,12 @@ ACC_RANGE_16G = 0x03
 
 ACC_MEASURE = 0x08
 ACC_AXES_DATA = 0x32
+#comms setup:
+COMMUNICATIONS_DEFAULT_SUPPORT_EMAIL = "hello@soundflux.io"
+POSTMARK_DEFAULT_SUPPORT_EMAIL_TOKEN =os.getenv("POSTMARK_DEFAULT_SUPPORT_EMAIL_TOKEN")
+POSTMARK_BASE_URL = "https://api.postmarkapp.com/email"
+POSTMARK_VENDOR_NAME = "POSTMARK"
+TWILIO_VENDOR_NAME = "TWILIO"
+TWILIO_ACCT_SID=os.getenv("TWILIO_ACCT_SID")
+SOUNDFLUX_SMS_NUMBER = os.getenv("SOUNDFLUX_SMS_NUMBER")
+TWILIO_AUTH_TOKEN= os.getenv("TWILIO_AUTH_TOKEN")

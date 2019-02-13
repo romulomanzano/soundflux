@@ -15,3 +15,6 @@ smbus-cffi==0.5.1
 PySoundFile==0.9.0.post1
 librosa==0.4.2
 jupyter
+python-dotenv
+requests
+twilio
