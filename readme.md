@@ -1,4 +1,4 @@
-# Fall detection
+# Soundflux
 
 ## Setup the Pi:
 - Open a terminal (or ssh into your Pi)
