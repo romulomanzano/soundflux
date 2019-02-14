@@ -20,8 +20,8 @@ def run():
     acc = Accelerometer()
 
     run_sound_capture = Thread(target=capture_sound_worker, args=(mic, sound_queue, stop_event,))
-    run_feature_extractor = Thread(target=extract_features_worker, args=(mic, sound_queue,)) #TODO Update args
-    run_inference = Thread(target=inference_worker, args=(mic, sound_queue,)) #TODO Update args
+    run_feature_extractor = Thread(target=extract_features_worker, args=(sound_queue, feature_queue, stop_event,))
+    run_inference = Thread(target=inference_worker, args=(feature_queue, fall_action,))
 
     for worker in threads:
         worker.setDaemon(True)
@@ -46,42 +46,27 @@ def capture_sound_worker(mic, qo, stop_event):
     :param q: Queue to store captured sound windows
     :return: None
     """
-    while not stop_event.is_set()
+    while not stop_event.is_set():
         l, data = mic.recorder.read()
         qo.put(data)
         qi.task_done()
 
-def extract_features_worker(sample_rate,n_windows=100,n_mels=23,n_fft=2048,fmax=8000, qi, qo, stop_event):
+def extract_features_worker(qi, qo, stop_event, sample_rate=16000, n_mels=23, n_fft=16, hop_length=8, fmax=8000):
     """
     This function will enable continuous transformation of raw input to transformed features
     :param qi: Queue to get audio samples
     :param qo: Queue to put features
     :return: None
     """
-    while not (stop_event.is_set() && qi.empty()):
-        samples = qi.get()
-
-        feature_set = []
-        if samples.shape[1:]:
-            channels = samples.shape[1:][0]
-        else:
-            channels = 1
-            samples = np.expand_dims(samples, axis=1)
-        for i in range(channels):
-            sample_channel_x = samples[:,i]
-            hop_length = round(len(sample_channel_x)/n_windows)
-            mel_spectrogram = librosa.feature.melspectrogram(y=sample_channel_x,
+    while not (stop_event.is_set() & qi.empty()):
+        sample = qi.get()
+        mel_spectrogram = librosa.feature.melspectrogram(y=sample,
                                                         sr=sample_rate,
                                                         n_fft=n_fft,
                                                         hop_length=hop_length,
                                                         n_mels = n_mels,
                                                         fmax = fmax)
-            decibel_spec = librosa.logamplitude(mel_spectrogram,ref_power=np.max)
-            feature_set.append(decibel_spec)
-        feature_set = np.array(feature_set)
-        feature_set = np.mean(feature_set,axis=0)[:,:n_windows]
-        
-        qo.put(feature_set)
+        qo.put(mel_spectrogram)
         qi.task_done()
 
 def inference_worker(qi, fall_action):
@@ -91,10 +76,11 @@ def inference_worker(qi, fall_action):
     :param fall_action: action to take if fall detected
     :return: None
     """
-    while not (stop_event.is_set() && qi.empty()):
+    while not (stop_event.is_set() & qi.empty()):
         features = qi.get()
-        if isFallInference(features):
-            do(fall_action)
+        #if isFallInference(features):
+        #    do(fall_action)
+        print(features)
         qi.task_done()
 
 
