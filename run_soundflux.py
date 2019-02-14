@@ -50,8 +50,6 @@ def capture_sound_worker(mic, qo, stop_event):
     """
     while not stop_event.is_set():
         l, data = mic.recorder.read()
-        print(l, data)
-        Debug=input("Paused")
         qo.put(data)
 
 def extract_features_worker(qi, qo, stop_event, sample_rate=16000, n_mels=23, n_fft=16, hop_length=8, fmax=8000):
@@ -62,16 +60,16 @@ def extract_features_worker(qi, qo, stop_event, sample_rate=16000, n_mels=23, n_
     :return: None
     """
     while not (stop_event.is_set() & qi.empty()):
-        sample = np.array(qi.get())
-        print(sample)
-        debug=input("Paused")
-        mel_spectrogram = librosa.feature.melspectrogram(y=sample,
-                                                        sr=sample_rate,
-                                                        n_fft=n_fft,
-                                                        hop_length=hop_length,
-                                                        n_mels = n_mels,
-                                                        fmax = fmax)
-        qo.put(mel_spectrogram)
+        sample = np.array(qi.get(),ndmin=2)
+        #@TODO Need to pass binary not byte text (pickle dependency)... try multiprocessing, mpipe, and sharemem
+        #mel_spectrogram = librosa.feature.melspectrogram(y=sample,
+        #                                                sr=sample_rate,
+        #                                                n_fft=n_fft,
+        #                                                hop_length=hop_length,
+        #                                                n_mels = n_mels,
+        #                                                fmax = fmax)
+        #qo.put(mel_spectrogram)
+        qo.put(sample)
         qi.task_done()
 
 def inference_worker(qi, fall_action):
