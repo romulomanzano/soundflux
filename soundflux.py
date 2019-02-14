@@ -37,7 +37,7 @@ class SoundFlux(object):
         self.recorder.setchannels(1)
         self.recorder.setrate(MIC_RATE)
         self.recorder.setformat(MIC_SET_FORMAT)
-        self.recorder.setperiodsize(MIC_RATE/1000)
+        self.recorder.setperiodsize(16)
 
     def record_x_seconds(self, seconds=constants.FEED_FILE_LENGTH):
         start = timeit.default_timer()
