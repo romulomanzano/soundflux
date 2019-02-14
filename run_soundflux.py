@@ -51,7 +51,6 @@ def capture_sound_worker(mic, qo, stop_event):
     while not stop_event.is_set():
         l, data = mic.recorder.read()
         qo.put(data)
-        qi.task_done()
 
 def extract_features_worker(qi, qo, stop_event, sample_rate=16000, n_mels=23, n_fft=16, hop_length=8, fmax=8000):
     """
