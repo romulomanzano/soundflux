@@ -60,7 +60,7 @@ def extract_features_worker(qi, qo, stop_event, sample_rate=16000, n_mels=23, n_
     :return: None
     """
     while not (stop_event.is_set() & qi.empty()):
-        sample = qi.get()
+        sample = np.array(qi.get())
         mel_spectrogram = librosa.feature.melspectrogram(y=sample,
                                                         sr=sample_rate,
                                                         n_fft=n_fft,
