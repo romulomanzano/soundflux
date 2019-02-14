@@ -30,8 +30,8 @@ def run():
         threads[worker].start()
 
     print("Listening and running inference... Press any key to stop.")
-    if input:
-        stop_event.set()
+    pause = input("Press button to stop.")
+    stop_event.set()
     print("Pipeline finishing...")
     for worker in threads.keys():
         while threads[worker].is_alive():
