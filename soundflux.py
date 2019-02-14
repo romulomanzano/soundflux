@@ -34,7 +34,7 @@ class SoundFlux(object):
 
     def _initialize_recorder_live_feed(self):
         """Set configurations for the recorder"""
-        self.recorder.setchannels(1)
+        self.recorder.setchannels(MIC_NUMBER_OF_CHANNELS)
         self.recorder.setrate(MIC_RATE)
         self.recorder.setformat(MIC_SET_FORMAT)
         self.recorder.setperiodsize(16)
