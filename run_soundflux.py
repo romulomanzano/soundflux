@@ -12,7 +12,6 @@ from soundflux import SoundFlux
 sound_queue = queue.Queue()
 feature_queue = queue.Queue()
 stop_event = Event()
-threads = ["run_sound_capture", "run_feature_extractor", "run_inference"]
 fall_action = "text"
 
 def run():
@@ -24,16 +23,18 @@ def run():
     run_feature_extractor = Thread(target=extract_features_worker, args=(sound_queue, feature_queue, stop_event,))
     run_inference = Thread(target=inference_worker, args=(feature_queue, fall_action,))
 
-    for worker in threads:
-        worker.setDaemon(True)
-        worker.start()
+    threads = {"run_sound_capture":run_sound_capture, "run_feature_extractor":run_feature_extractor, "run_inference":run_inference}
+
+    for worker in threads.keys():
+        threads[worker].setDaemon(True)
+        threads[worker].start()
 
     print("Listening and running inference... Press any key to stop.")
     if input:
         stop_event.set()
     print("Pipeline finishing...")
-    for worker in threads:
-        while worker.is_alive():
+    for worker in threads.keys():
+        while threads[worker].is_alive():
             time.sleep(.25)
     print("Pipeline complete!")
 
