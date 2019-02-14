@@ -1,4 +1,4 @@
-import Queue
+import queue
 import time
 from threading import Event, Thread
 
@@ -9,10 +9,11 @@ from accelerometer import Accelerometer
 from soundflux import SoundFlux
 
 # Set up some global variables
-sound_queue = Queue.Queue()
-feature_queue = Queue.Queue()
+sound_queue = queue.Queue()
+feature_queue = queue.Queue()
 stop_event = Event()
 threads = ["run_sound_capture", "run_feature_extractor", "run_inference"]
+fall_action = "text"
 
 def run():
     # Instantiate Objects
