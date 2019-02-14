@@ -8,7 +8,7 @@ import wave
 import datetime
 import constants
 import utils
-import Queue
+import queue
 
 @utils.logged
 class SoundFlux(object):
