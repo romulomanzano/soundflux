@@ -16,7 +16,7 @@ fall_action = "text"
 
 def run():
     # Instantiate Objects
-    mic = SoundFlux(liveFeed=True)
+    mic = SoundFlux(live_feed=True)
     acc = Accelerometer()
 
     run_sound_capture = Thread(target=capture_sound_worker, args=(mic, sound_queue, stop_event,))
