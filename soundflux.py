@@ -17,8 +17,8 @@ class SoundFlux(object):
     It may have one or more PCM attributes (recording and player)
     """
 
-    def __init__(self, liveFeed=False):
-        if not liveFeed:
+    def __init__(self, live_feed=False):
+        if not live_feed:
             self.recorder = alsaaudio.PCM(alsaaudio.PCM_CAPTURE, alsaaudio.PCM_NONBLOCK, device=MIC_DEVICE)
             self._initialize_recorder()
         else:
