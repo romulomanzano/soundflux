@@ -14,7 +14,7 @@ import librosa
 import soundfile
 import feature_generation as fg
 
-def test_time_load(file_name='/home/pi/github/falldetection/tests/wav/hello.wav'):
+def test_time_load(file_name='/home/pi/github/soundflux/tests/wav/hello.wav'):
     start = timeit.default_timer()
     #loading
     samples, sample_rate = soundfile.read(file_name)

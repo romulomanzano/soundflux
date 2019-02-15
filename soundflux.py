@@ -8,17 +8,22 @@ import wave
 import datetime
 import constants
 import utils
+import queue
 
 @utils.logged
 class SoundFlux(object):
     """
     This will act as a wrapper on the alsaaudio PCM class.
-    It may have ore or more PCM attributes (recording and player)
+    It may have one or more PCM attributes (recording and player)
     """
 
-    def __init__(self):
-        self.recorder = alsaaudio.PCM(alsaaudio.PCM_CAPTURE, alsaaudio.PCM_NONBLOCK, device=MIC_DEVICE)
-        self._initialize_recorder()
+    def __init__(self, live_feed=False):
+        if not live_feed:
+            self.recorder = alsaaudio.PCM(alsaaudio.PCM_CAPTURE, alsaaudio.PCM_NONBLOCK, device=MIC_DEVICE)
+            self._initialize_recorder()
+        else:
+            self.recorder = alsaaudio.PCM(alsaaudio.PCM_CAPTURE, alsaaudio.PCM_NORMAL, device=MIC_DEVICE)
+            self._initialize_recorder_live_feed()
 
     def _initialize_recorder(self):
         """Set configurations for the recorder"""
@@ -26,6 +31,13 @@ class SoundFlux(object):
         self.recorder.setrate(MIC_RATE)
         self.recorder.setformat(MIC_SET_FORMAT)
         self.recorder.setperiodsize(MIC_PERIOD_SIZE)
+
+    def _initialize_recorder_live_feed(self):
+        """Set configurations for the recorder"""
+        self.recorder.setchannels(MIC_NUMBER_OF_CHANNELS)
+        self.recorder.setrate(MIC_RATE)
+        self.recorder.setformat(MIC_SET_FORMAT)
+        self.recorder.setperiodsize(16)
 
     def record_x_seconds(self, seconds=constants.FEED_FILE_LENGTH):
         start = timeit.default_timer()
@@ -59,7 +71,6 @@ class SoundFlux(object):
             now = datetime.datetime.utcnow()
             file_name = self._generate_feed_filename(now, output_directory,chunk_size=chunk_size)
             self.record_and_save_x_seconds(file_name,seconds=chunk_size)
-
 
 if __name__ == '__main__':
     action = sys.argv[1]
