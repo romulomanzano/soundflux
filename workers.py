@@ -36,7 +36,7 @@ def extract_features_worker(qi, qo, go, model_type, sample_rate=16000, n_mels=23
     while go.value==1:
         while not qi.empty():
 
-            if model_type="cnn":
+            if model_type=="cnn":
                 window = window.put(range(window.size/2), window.take(range(window.size/2, window.size))) # move second half of data to beginning then fill the second half with a for loop
                 for step in range(window.size/(MIC_PERIOD_SIZE_LIVE_FEED*MIC_NUMBER_OF_CHANNELS*2)):      # compile enough samples to make a complete spectrogram for cnn inference
                     if go.value==0 and qi.empty():
@@ -55,7 +55,7 @@ def extract_features_worker(qi, qo, go, model_type, sample_rate=16000, n_mels=23
                                                                     fmax=fmax)
                     qo.put(mel_spectrogram)      
 
-            if model_type="rnn":
+            if model_type=="rnn":
                 pass                
                 # librosa call is to return a single spectrogram time step for an RNN classifier
 
