@@ -30,20 +30,18 @@ def run():
         Process(target=inference_worker, args=(feature_queue, inference_queue, go,)),
 
         "fall_responder":
-        Process(target=response_worker, args=(inference_queue, go, fall_action,)),
-
-        "pipeline_stopper":
-        Process(target=pipeline_stopper_worker args=(go,))
+        Process(target=fall_response_worker, args=(inference_queue, go, fall_action,))
         }
 
     for process in processes.keys():
         processes[process].daemon = True
         processes[process].start()
 
-    print("Listening and running inference... Press any key to stop.")
-    
+    input("Listening and running inference... Enter any value to stop the pipeline: ")
+    go.value = 0
+    print("Pipeline finishing...")
     for process in processes.keys():
-        processes(process).join()
+        processes[process].join()
         
     print("Pipeline complete!")
 
@@ -56,7 +54,7 @@ def capture_sound_worker(mic, qo, go):
     :param go: bool run signal from spawning process
     :return: None
     """
-    while go:
+    while go.value==1:
         l, data = mic.recorder.read()
         array = np.frombuffer(data, dtype = np.dtype('>i4'))
         if np.max(array) > 15: # placeholder for global config used for volume filtering before doing heavy computation
@@ -72,7 +70,7 @@ def extract_features_worker(qi, qo, go, sample_rate=16000, n_mels=23, n_fft=1, h
     :param go: bool run signal from spawning process
     :return: None
     """
-    while go:
+    while go.value==1:
         while not qi.empty():
             sample = qi.get()
             # if the below call is to return a single spectrogram
@@ -101,7 +99,7 @@ def inference_worker(qi, qo, go):
     """
     n = 0 # debugging code
     
-    while go:
+    while go.value==1:
         while not qi.empty():
             features = qi.get()
             #if isFallInference(features):
@@ -120,20 +118,10 @@ def fall_response_worker(qi, go, fall_action):
     :param fall_action: string to control response
     :return: None
     """
-    while go:
+    while go.value==1:
         while not qi.empty():
             fall = qi.get()
             print(str(fall))
-
-def pipeline_stopper_worker(go):
-    """
-    This function will enable stopping the pipeline
-    :param go: bool run signal from spawning process
-    :return: None
-    """
-    stop_command = input("Enter any value to stop the pipeline: ")
-    go = Value('i', 0)
-    print("Pipeline finishing...")
 
 if __name__ == '__main__':
     run()
