@@ -1,9 +1,10 @@
 import numpy as np
 
 import librosa
+from config import *
 
 
-def capture_sound_worker(mic, qo, go):
+def data_capture_worker(mic, acc, qo, go):
     """
     This function will enable continuous recording through the device, while writing to a buffer
     every segment
@@ -13,39 +14,50 @@ def capture_sound_worker(mic, qo, go):
     :return: None
     """
     while go.value==1:
+
         l, data = mic.recorder.read()
         array = np.frombuffer(data, dtype = np.dtype('>i4'))
-        if np.max(array) > 15: # placeholder for global config used for volume filtering before doing heavy computation
-            #@TODO reorganize array into 100x4 array (samples x channels)
-            qo.put(array)
+        channeled_array = np.reshape(array, (4, int(MIC_PERIOD_SIZE_LIVE_FEED/MIC_NUMBER_OF_CHANNELS)), order="F")
+        mean_signal = np.mean(channeled_array, axis=0)
+        qo.put(mean_signal)
 
-def extract_features_worker(qi, qo, go, sample_rate=16000, n_mels=23, n_fft=1, hop_length=8, fmax=8000):
+def extract_features_worker(qi, qo, go, model_type, sample_rate=16000, n_mels=23, n_fft=16, hop_length=8, fmax=8000, inference_window=1):
     """
     This function will enable continuous transformation of raw input to transformed features.
     It will return either a single timestep feature array, or a full nd array.
     :param qi: Queue object to get audio samples
     :param qo: Queue object to put features
     :param go: bool run signal from spawning process
+    :param inference_window: float number of seconds to process in a single spectrogram
     :return: None
     """
+    window = np.zeros(MIC_RATE*inference_window)
+
     while go.value==1:
         while not qi.empty():
-            sample = qi.get()
-            # if the below call is to return a single spectrogram
-            # column (one timestep), then we should overlap the sample parameter...
-            # this would be potentially useful in a RNN classifier
-            
-            # if the below call is returning a full spectrogram for inference,
-            # then we should compile enough in the previous worker and put in
-            # queue if it meets the volume threshold...
-            # this would be more practical for a pure CNN classifier
-            mel_spectrogram = librosa.feature.melspectrogram(y=sample,
-                                                            sr=sample_rate,
-                                                            n_fft=n_fft,
-                                                            hop_length=hop_length,
-                                                            n_mels = n_mels,
-                                                            fmax = fmax)
-            qo.put(mel_spectrogram)
+
+            if model_type="cnn":
+                window = window.put(range(window.size/2), window.take(range(window.size/2, window.size))) # move second half of data to beginning then fill the second half with a for loop
+                for step in range(window.size/(MIC_PERIOD_SIZE_LIVE_FEED*MIC_NUMBER_OF_CHANNELS*2)):      # compile enough samples to make a complete spectrogram for cnn inference
+                    if go.value==0 and qi.empty():
+                        return
+                    window.put(
+                        range(window.size/2 + step*MIC_PERIOD_SIZE_LIVE_FEED/MIC_NUMBER_OF_CHANNELS,
+                         window.size/2 + (step+1)*MIC_PERIOD_SIZE_LIVE_FEED/MIC_NUMBER_OF_CHANNELS),
+                         qi.get())
+
+                if np.max(window) > MIN_VOLUME_FOR_INFERENCE:
+                    mel_spectrogram = librosa.feature.melspectrogram(y=window,
+                                                                    sr=sample_rate,
+                                                                    n_fft=n_fft,
+                                                                    hop_length=hop_length,
+                                                                    n_mels=n_mels,
+                                                                    fmax=fmax)
+                    qo.put(mel_spectrogram)      
+
+            if model_type="rnn":
+                pass                
+                # librosa call is to return a single spectrogram time step for an RNN classifier
 
 def inference_worker(qi, qo, go):
     """
@@ -59,11 +71,11 @@ def inference_worker(qi, qo, go):
     
     while go.value==1:
         while not qi.empty():
+
             features = qi.get()
-            #if isFallInference(features):
+            #if isFallInference(features): @TODO port and call inference code
                 #qo.put(True)
-            #else:
-                #qo.put(False)
+
             n += 1 # debugging code
             msg = "#" + str(n) + " " + str(type(features)) + " " + str(features.shape) # debugging code
             qo.put(msg) # debugging code
@@ -78,5 +90,6 @@ def fall_response_worker(qi, go, fall_action):
     """
     while go.value==1:
         while not qi.empty():
+
             fall = qi.get()
-            print(str(fall))
+            print(str(fall)) #@TODO call texting/calling functions
