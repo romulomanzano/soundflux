@@ -37,8 +37,8 @@ def extract_features_worker(qi, qo, go, model_type, sample_rate=16000, n_mels=23
         while not qi.empty():
 
             if model_type=="cnn":
-                window = window.put(range(window.size/2), window.take(range(window.size/2, window.size))) # move second half of data to beginning then fill the second half with a for loop
-                for step in range(window.size/(MIC_PERIOD_SIZE_LIVE_FEED*MIC_NUMBER_OF_CHANNELS*2)):      # compile enough samples to make a complete spectrogram for cnn inference
+                window = window.put(range(int(window.size/2)), window.take(range(int(window.size/2), window.size))) # move second half of data to beginning then fill the second half with a for loop
+                for step in range(int(window.size/(MIC_PERIOD_SIZE_LIVE_FEED*2))):      # compile enough samples to make a complete spectrogram for cnn inference
                     if go.value==0 and qi.empty():
                         return
                     window.put(
