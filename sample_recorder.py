@@ -17,7 +17,7 @@ import datetime
 class SampleRecorder(object):
 
     def __init__(self):
-        self.acc = Accelerometer()
+#       self.acc = Accelerometer()
         self.mic = SoundFlux()
         self.sample_audio = None
         self.sample_vibration = None
