@@ -20,24 +20,22 @@ class SoundFlux(object):
     def __init__(self, live_feed=False):
         if not live_feed:
             self.recorder = alsaaudio.PCM(alsaaudio.PCM_CAPTURE, alsaaudio.PCM_NONBLOCK, device=MIC_DEVICE)
-            self._initialize_recorder()
+            self._initialize_recorder(live_feed)
         else:
             self.recorder = alsaaudio.PCM(alsaaudio.PCM_CAPTURE, alsaaudio.PCM_NORMAL, device=MIC_DEVICE)
-            self._initialize_recorder_live_feed()
+            self._initialize_recorder(live_feed)
 
-    def _initialize_recorder(self):
+    def _initialize_recorder(self, live_feed):
         """Set configurations for the recorder"""
         self.recorder.setchannels(MIC_NUMBER_OF_CHANNELS)
         self.recorder.setrate(MIC_RATE)
         self.recorder.setformat(MIC_SET_FORMAT)
-        self.recorder.setperiodsize(MIC_PERIOD_SIZE)
+        
+        if live_feed:
+            self.recorder.setperiodsize(MIC_PERIOD_SIZE_LIVE_FEED)
+        else:
+            self.recorder.setperiodsize(MIC_PERIOD_SIZE)
 
-    def _initialize_recorder_live_feed(self):
-        """Set configurations for the recorder"""
-        self.recorder.setchannels(MIC_NUMBER_OF_CHANNELS)
-        self.recorder.setrate(MIC_RATE)
-        self.recorder.setformat(MIC_SET_FORMAT)
-        self.recorder.setperiodsize(400)
 
     def record_x_seconds(self, seconds=constants.FEED_FILE_LENGTH):
         start = timeit.default_timer()
