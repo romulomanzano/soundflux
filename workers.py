@@ -42,8 +42,8 @@ def extract_features_worker(qi, qo, go, model_type, sample_rate=16000, n_mels=23
                     if go.value==0 and qi.empty():
                         return
                     window.put(
-                        range(window.size/2 + step*MIC_PERIOD_SIZE_LIVE_FEED/MIC_NUMBER_OF_CHANNELS,
-                         window.size/2 + (step+1)*MIC_PERIOD_SIZE_LIVE_FEED/MIC_NUMBER_OF_CHANNELS),
+                        range(int(window.size/2 + step*MIC_PERIOD_SIZE_LIVE_FEED),
+                         int(window.size/2 + (step+1)*MIC_PERIOD_SIZE_LIVE_FEED)),
                          qi.get())
 
                 if np.max(window) > MIN_VOLUME_FOR_INFERENCE:
