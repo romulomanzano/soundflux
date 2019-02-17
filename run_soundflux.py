@@ -5,7 +5,7 @@ from soundflux import SoundFlux
 from workers import *
 
 
-def run(fall_action="text", model_type="cnn"):
+def run(fall_action="text", model_type="cnn", save_spectrograms=False):
 
     # Instantiate Devices
     mic = SoundFlux(live_feed=True)
@@ -24,7 +24,7 @@ def run(fall_action="text", model_type="cnn"):
         "data_capturer":
         Process(target=data_capture_worker, args=(mic, acc, sound_queue, go,)),
         "feature_extractor":
-        Process(target=extract_features_worker, args=(sound_queue, feature_queue, go, model_type)),
+        Process(target=extract_features_worker, args=(sound_queue, feature_queue, go, model_type, save_spectrograms)),
         "inference_runner":
         Process(target=inference_worker, args=(feature_queue, inference_queue, go,)),
         "fall_responder":
