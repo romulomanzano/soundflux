@@ -31,19 +31,20 @@ def extract_features_worker(qi, qo, go, model_type, sample_rate=16000, n_mels=23
     :param inference_window: float number of seconds to process in a single spectrogram
     :return: None
     """
-    window = np.zeros(MIC_RATE*inference_window)
+    samples_in_window = MIC_RATE*inference_window
+    window = np.zeros(samples_in_window)
 
     while go.value==1:
         while not qi.empty():
 
             if model_type=="cnn":
-                window = window.put(range(int(window.size/2)), window.take(range(int(window.size/2), window.size))) # move second half of data to beginning then fill the second half with a for loop
-                for step in range(int(window.size/(MIC_PERIOD_SIZE_LIVE_FEED*2))):      # compile enough samples to make a complete spectrogram for cnn inference
+                window = window.put(range(int(samples_in_window/2)), window.take(range(int(samples_in_window/2), samples_in_window))) # move second half of data to beginning then fill the second half with a for loop
+                for step in range(int(samples_in_window/(MIC_PERIOD_SIZE_LIVE_FEED*2))):      # compile enough samples to make a complete spectrogram for cnn inference
                     if go.value==0 and qi.empty():
                         return
                     window.put(
-                        range(int(window.size/2 + step*MIC_PERIOD_SIZE_LIVE_FEED),
-                         int(window.size/2 + (step+1)*MIC_PERIOD_SIZE_LIVE_FEED)),
+                        range(int(samples_in_window/2 + step*MIC_PERIOD_SIZE_LIVE_FEED),
+                         int(samples_in_window/2 + (step+1)*MIC_PERIOD_SIZE_LIVE_FEED)),
                          qi.get())
 
                 if np.max(window) > MIN_VOLUME_FOR_INFERENCE:
