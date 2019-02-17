@@ -17,7 +17,7 @@ def data_capture_worker(mic, acc, qo, go):
 
         l, data = mic.recorder.read()
         array = np.frombuffer(data, dtype = np.dtype('>i4'))
-        channeled_array = np.reshape(array, (4, int(MIC_PERIOD_SIZE_LIVE_FEED/MIC_NUMBER_OF_CHANNELS)), order="F")
+        channeled_array = np.reshape(array, (4, int(MIC_PERIOD_SIZE_LIVE_FEED)), order="F")
         mean_signal = np.mean(channeled_array, axis=0)
         qo.put(mean_signal)
 
