@@ -1,5 +1,5 @@
 import numpy as np
-
+import scipy.misc
 import librosa
 from config import *
 
@@ -21,7 +21,8 @@ def data_capture_worker(mic, acc, qo, go):
         mean_signal = np.mean(channeled_array, axis=0)
         qo.put(mean_signal)
 
-def extract_features_worker(qi, qo, go, model_type, sample_rate=16000, n_mels=23, n_fft=16, hop_length=8, fmax=8000, inference_window=1):
+def extract_features_worker(qi, qo, go, model_type, save_spectrograms, sample_rate=16000, 
+                            n_mels=23, n_fft=16, hop_length=8, fmax=8000, inference_window=1):
     """
     This function will enable continuous transformation of raw input to transformed features.
     It will return either a single timestep feature array, or a full nd array.
@@ -54,7 +55,9 @@ def extract_features_worker(qi, qo, go, model_type, sample_rate=16000, n_mels=23
                                                                     hop_length=hop_length,
                                                                     n_mels=n_mels,
                                                                     fmax=fmax)
-                    qo.put(mel_spectrogram)      
+                    qo.put(mel_spectrogram)
+                    if save_spectrograms:
+                        scipy.misc.toimage(mel_spectrogram, cmin=0.0, cmax=...).save('outfile.jpg')
 
             if model_type=="rnn":
                 pass                
