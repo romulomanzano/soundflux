@@ -4,6 +4,7 @@ import librosa
 from config import *
 from datetime import datetime as dt
 import matplotlib.pyplot as plt
+import tensorflow as tf
 
 def data_capture_worker(mic, acc, qo, go):
     """
@@ -26,7 +27,7 @@ def data_capture_worker(mic, acc, qo, go):
             return
 
 def extract_features_worker(qi, qo, go, model_type, save_spectrograms, sample_rate=16000, 
-                            n_mels=320, n_fft=2048, hop_length=10, fmax=8000, inference_window=1):
+                            n_mels=64, n_fft=1024, hop_length=10, fmax=8000, inference_window=1):
     """
     This function will enable continuous transformation of raw input to transformed features.
     It will return either a single timestep feature array, or a full nd array.
@@ -83,19 +84,31 @@ def inference_worker(qi, qo, go):
     :param go: bool run signal from spawning process
     :return: None
     """
-    n = 0 # debugging code
+    #n = 0 # debugging code
     
+    # Load TFLite model and allocate tensors.
+    interpreter = tf.contrib.lite.Interpreter(model_path="/trained_models/model3.tflite")
+    interpreter.allocate_tensors()
+
+    # Get input and output tensors.
+    input_details = interpreter.get_input_details()
+    output_details = interpreter.get_output_details()
+
     while True:
         features = qi.get()
         if type(features) == bool:
             qo.put(False)
             return
-        #elif isFallInference(features): @TODO port and call inference code
-            #qo.put(True)
+        else:
+            # change the following line to feed into your own data.
+            interpreter.set_tensor(input_details[0]['index'], features)
+            interpreter.invoke()
+            output_data = interpreter.get_tensor(output_details[0]['index'])
+            qo.put(output_data)
 
-        n += 1 # debugging code
-        msg = "#" + str(n) + " " + str(type(features)) + " " + str(features.shape) # debugging code
-        qo.put(msg) # debugging code
+        #n += 1 # debugging code
+        #msg = "#" + str(n) + " " + str(type(features)) + " " + str(features.shape) # debugging code
+        #qo.put(msg) # debugging code
         
 def fall_response_worker(qi, go, fall_action):
     """
