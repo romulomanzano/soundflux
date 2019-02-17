@@ -20,14 +20,20 @@ def run():
     go = Value('i', 1)
 
     processes = {
-        "run_sound_capture":
+        "data_capturer":
         Process(target=capture_sound_worker, args=(mic, sound_queue, go,)),
         
-        "run_feature_extractor":
+        "feature_extractor":
         Process(target=extract_features_worker, args=(sound_queue, feature_queue, go,)),
         
-        "run_inference":
-        Process(target=inference_worker, args=(feature_queue, inference_queue, go,))
+        "inference_runner":
+        Process(target=inference_worker, args=(feature_queue, inference_queue, go,)),
+
+        "fall_responder":
+        Process(target=response_worker, args=(inference_queue, go, fall_action,)),
+
+        "pipeline_stopper":
+        Process(target=pipeline_stopper_worker args=(go,))
         }
 
     for process in processes.keys():
@@ -35,22 +41,11 @@ def run():
         processes[process].start()
 
     print("Listening and running inference... Press any key to stop.")
-    while True:
-        fall = inference_queue.get()
-        print(str(fall))
-        #if fall:
-        #    do(fall_action)
-        
-    # probably need to abstract here to get it to stop when desired
-    pause = input("Press button to stop.")
-    go = Value('i', 0)
-    print("Pipeline finishing...")
+    
     for process in processes.keys():
-        while processes[process].is_alive():
-            time.sleep(.25)
+        processes(process).join()
+        
     print("Pipeline complete!")
-
-    return 0
 
 def capture_sound_worker(mic, qo, go):
     """
@@ -116,6 +111,29 @@ def inference_worker(qi, qo, go):
             n += 1 # debugging code
             msg = "#" + str(n) + " " + str(type(features)) + " " + str(features.shape) # debugging code
             qo.put(msg) # debugging code
+
+def fall_response_worker(qi, go, fall_action):
+    """
+    This function will enable continuous monitoring and response to the pipeline
+    :param qi: Queue object to get features
+    :param go: bool run signal from spawning process
+    :param fall_action: string to control response
+    :return: None
+    """
+    while go:
+        while not qi.empty():
+            fall = qi.get()
+            print(str(fall))
+
+def pipeline_stopper_worker(go):
+    """
+    This function will enable stopping the pipeline
+    :param go: bool run signal from spawning process
+    :return: None
+    """
+    stop_command = input("Enter any value to stop the pipeline: ")
+    go = Value('i', 0)
+    print("Pipeline finishing...")
 
 if __name__ == '__main__':
     run()
