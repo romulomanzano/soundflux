@@ -19,3 +19,10 @@
 - Install git, vs c++ build tools,
 - clone repo
 - run setup_windows_dev.bat
+
+## Publicly Available Datasets
+
+### UrbanSounds8k spectrograms
+
+All 8k audio files were converted to PNG using the logic described in "Transfer Learning Notebools/Transfer Learning - .wav to 2D MelSpectrogram to Png Files.ipynb" and made available here:
+- https://s3.amazonaws.com/soundflux-urbansounds/spectrograms.zip
