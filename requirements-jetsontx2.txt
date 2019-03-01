@@ -66,3 +66,4 @@ widgetsnbextension==3.4.2
 ijson
 twilio
 keras
+pillow
