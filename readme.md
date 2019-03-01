@@ -25,4 +25,4 @@
 ### UrbanSounds8k spectrograms
 
 All 8k audio files were converted to PNG using the logic described in "Transfer Learning Notebools/Transfer Learning - .wav to 2D MelSpectrogram to Png Files.ipynb" and made available here:
-- https://s3.amazonaws.com/soundflux-urbansounds/spectrograms.zip
+- https://s3.amazonaws.com/soundflux-urbansounds/kfold_spectrograms.zip
