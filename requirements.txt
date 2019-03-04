@@ -18,4 +18,5 @@ librosa==0.4.2
 jupyter
 python-dotenv
 requests
+keras
 twilio
