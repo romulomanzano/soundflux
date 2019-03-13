@@ -1,0 +1,1 @@
+"""Module where all the MongoDb definitions go"""
