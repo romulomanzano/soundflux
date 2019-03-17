@@ -19,6 +19,7 @@ from feature_generation import extract_spectrogram
 import requests
 from config import *
 import base64
+import datetime
 
 def register_samples():
     samples_folder = "/home/romulo/github/soundflux/samples"
@@ -65,13 +66,15 @@ def register_samples():
                 metadata = row['metadata']
             else:
                 metadata={}
+            order_by_field = datetime.datetime.strptime(row['timestamp'], "%m/%d/%Y, %H:%M:%S").timestamp()
             request_data = {
                         "sample_details" : {
                             "metadata" : {
                                 "sample_lenght" : row['sample_length'],
                                 "distance_from_device": metadata.get('distance_from_device'),
                                 "floor_type": metadata.get('floor_type'),
-                                "timestamp" : row.get('timestamp')
+                                "timestamp" : row['timestamp'],
+                                "time_order_desc" : -order_by_field
                             },
                             "sample_type" : "training_data",
                             "label" : row['class'],
