@@ -5,7 +5,7 @@ from soundflux import SoundFlux
 from workers import *
 
 
-def run(save_spectrograms=False):
+def run(save_spectrograms=True):
 
     # Instantiate Devices
     mic = SoundFlux(live_feed=True)
@@ -22,7 +22,7 @@ def run(save_spectrograms=False):
         "data_capturer":
         Process(target=data_capture_worker, args=(mic, acc, sound_queue, go,)),
         "feature_extractor":
-        Process(target=extract_features_worker, args=(sound_queue, feature_queue, go, save_spectrograms))
+        Process(target=extract_features_worker, args=(sound_queue, go, save_spectrograms))
         }
 
     # Start processes as daemons
