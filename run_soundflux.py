@@ -20,9 +20,9 @@ def run(save_spectrograms=True):
     # Define processes
     processes = {
         "data_capturer":
-        Process(target=data_capture_worker, args=(mic, acc, sound_queue, go,)),
+        Process(target=audio_capture_worker, args=(mic,sound_queue, go,)),
         "feature_extractor":
-        Process(target=extract_features_worker, args=(sound_queue, go, save_spectrograms))
+        Process(target=extract_audio_features_worker, args=(sound_queue, go,True))
         }
 
     # Start processes as daemons

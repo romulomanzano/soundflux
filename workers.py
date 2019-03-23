@@ -6,6 +6,8 @@ from datetime import datetime as dt
 import matplotlib.pyplot as plt
 from feature_generation import extract_spectrogram
 import specdisplay
+import wave
+import soundfile
 
 def data_capture_worker(mic, acc, qo, go):
     """
@@ -45,6 +47,57 @@ def audio_capture_worker(mic, sound_queue, go):
             return
 
 
+def extract_audio_features_worker(sound_queue, go, save_features, sample_rate=16000,
+                            n_mels=128, n_fft=2048, inference_window=5, seconds_between_samples = 0.4):
+    """
+    This function will enable continuous transformation of raw input to transformed features.
+    It will return either a single timestep feature array, or a full nd array.
+    :param qi: Queue object to get audio samples
+    :param qo: Queue object to put features
+    :param go: bool run signal from spawning process
+    :param inference_window: float number of seconds to process in a single spectrogram
+    :return: None
+    """
+    frames_in_window = int((MIC_RATE/MIC_PERIOD_SIZE_LIVE_FEED)* inference_window)
+    frames = []
+    frames_to_be_shifted = int((MIC_RATE/MIC_PERIOD_SIZE_LIVE_FEED) * seconds_between_samples)
+    while True:
+        # shift frames
+        if len(frames) >= frames_in_window:
+            frames = frames[frames_to_be_shifted:]
+        print("Len for frames {}".format(len(frames)))
+        for step in range(frames_to_be_shifted):
+            if go.value==0 and sound_queue.empty():
+                return
+            # compile enough samples to make a complete spectrogram for inference
+            frames.append(sound_queue.get())
+            print(len(frames),step)
+
+        if len(frames) >= frames_in_window:
+            print("Should save now")
+            now = dt.now()
+            #save wave
+            with wave.open("recorded_sample_{}.wav".format(now), 'wb') as wave_file:
+               wave_file.setnchannels(MIC_NUMBER_OF_CHANNELS)
+               wave_file.setsampwidth(TARGET_FILE_SAMPLE_WIDTH)
+               wave_file.setframerate(MIC_RATE)
+               wave_file.writeframes(b''.join(frames))
+            #read from file
+            y, sr = soundfile.read("recorded_sample_{}.wav".format(now))
+            #spectrogram
+            spec = extract_spectrogram(y, sample_rate=sr,n_mels=n_mels,n_fft=n_fft)
+            if save_features:
+                fig = plt.figure(figsize=(12, 4))
+                ax = plt.Axes(fig, [0., 0., 1., 1.])
+                ax.set_axis_off()
+                fig.add_axes(ax)
+                # getting spectrogram
+                specdisplay.specshow(spec, sr=sample_rate, x_axis='time', y_axis='mel')
+                # Saving PNG
+                plt.savefig("mel_spectrogram_{}.png".format(now))
+                plt.close()
+
+                
 def extract_features_worker(sound_queue, go, save_spectrograms, sample_rate=16000,
                             n_mels=128, n_fft=2048, inference_window=1):
     """
