@@ -81,7 +81,7 @@ class SampleRecorder(object):
         if self.sample_vibration:
             # vibration_file
             with open(base_path + vibration_file_name, 'w') as fp:
-                json.dump(file_details, fp)
+                json.dump(self.sample_vibration, fp)
         else:
             file_details.pop('vibration_file')
         ##Save wav file

@@ -8,6 +8,8 @@ from feature_generation import extract_spectrogram
 import specdisplay
 import wave
 import soundfile
+import time
+import json
 
 def data_capture_worker(mic, acc, qo, go):
     """
@@ -29,6 +31,22 @@ def data_capture_worker(mic, acc, qo, go):
         if go.value == 0:
             return
 
+def vibration_capture_worker(acc, acc_queue, go, sample_frequency_hertz = ACC_FREQUENCY_HZ,
+                             gforce=True, apply_scaler=True):
+    """
+    This function will enable continuous recording through the device, while writing to a buffer
+    every segment
+    :param acc: Accelerometer object
+    :param qo: Queue object to store captured sound windows
+    :param go: bool run signal from spawning process
+    :return: None
+    """
+    while True:
+        ax = acc.get_axes(gforce=gforce,apply_scaler=apply_scaler)
+        acc_queue.put(ax)
+        time.sleep(1.0 / sample_frequency_hertz)
+        if go.value == 0:
+            return
 
 def audio_capture_worker(mic, sound_queue, go):
     """
@@ -65,16 +83,14 @@ def extract_audio_features_worker(sound_queue, go, save_features, sample_rate=16
         # shift frames
         if len(frames) >= frames_in_window:
             frames = frames[frames_to_be_shifted:]
-        print("Len for frames {}".format(len(frames)))
         for step in range(frames_to_be_shifted):
             if go.value==0 and sound_queue.empty():
                 return
             # compile enough samples to make a complete spectrogram for inference
             frames.append(sound_queue.get())
-            print(len(frames),step)
+            
 
         if len(frames) >= frames_in_window:
-            print("Should save now")
             now = dt.now()
             #save wave
             with wave.open("recorded_sample_{}.wav".format(now), 'wb') as wave_file:
@@ -97,6 +113,46 @@ def extract_audio_features_worker(sound_queue, go, save_features, sample_rate=16
                 plt.savefig("mel_spectrogram_{}.png".format(now))
                 plt.close()
 
+def extract_vibration_features_worker(acc_queue, go, save_features,sample_frequency_hertz = ACC_FREQUENCY_HZ, 
+                                      inference_window=1, seconds_between_samples = 1):
+    """
+    This function will enable continuous transformation of raw input to transformed features.
+    It will return either a single timestep feature array, or a full nd array.
+    :param qi: Queue object to get audio samples
+    :param qo: Queue object to put features
+    :param go: bool run signal from spawning process
+    :param inference_window: float number of seconds to process in a single spectrogram
+    :return: None
+    """
+    frames_in_window = int(sample_frequency_hertz * inference_window)
+    frames = []
+    frames_to_be_shifted = int(sample_frequency_hertz * seconds_between_samples)
+    while True:
+        # shift frames
+        if len(frames) >= frames_in_window:
+            frames = frames[frames_to_be_shifted:]
+        print("Len for frames {}".format(len(frames)))
+        for step in range(frames_to_be_shifted):
+            if go.value==0 and acc_queue.empty():
+                return
+            # compile enough samples to make a complete spectrogram for inference
+            frames.append(acc_queue.get())
+    
+        if len(frames) >= frames_in_window:
+            print("Should save now")
+            #check vibration thresholds
+            max_x, max_y, max_z = 0, 0, 0
+            for k in frames:
+                #max and keep the sign
+                max_x = max(abs(k.get('x',0)),max_x)
+                max_y = max(abs(k.get('y',0)),max_y)
+                max_z = max(abs(k.get('z',0)),max_z)
+            print("Max x, y, z: {}, {}, {}".format(round(max_x,2),round(max_y,2),round(max_z,2))) 
+            if save_features:
+                now = dt.now()
+                vibration_file_name = "{}_vibration.json".format(now)
+                with open(vibration_file_name, 'w') as fp:
+                    json.dump({'max_x':max_x,'max_y':max_y,'max_z':max_z}, fp)
                 
 def extract_features_worker(sound_queue, go, save_spectrograms, sample_rate=16000,
                             n_mels=128, n_fft=2048, inference_window=1):

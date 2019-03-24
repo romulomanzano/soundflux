@@ -13,16 +13,20 @@ def run(save_spectrograms=True):
 
     # Instantiate Queues
     sound_queue = Queue()
-    feature_queue = Queue()
+    accelerometer_queue = Queue()
     # Instantiate shared memory signals
     go = Value('i', 1)
 
     # Define processes
     processes = {
-        "data_capturer":
+        "sound_data_capturer":
         Process(target=audio_capture_worker, args=(mic,sound_queue, go,)),
-        "feature_extractor":
-        Process(target=extract_audio_features_worker, args=(sound_queue, go,True))
+        "sound_feature_extractor":
+        Process(target=extract_audio_features_worker, args=(sound_queue, go,True)),
+        "acc_data_capturer":
+        Process(target=vibration_capture_worker, args=(acc,accelerometer_queue, go,)),
+        "acc_feature_extractor":
+        Process(target=extract_vibration_features_worker, args=(accelerometer_queue, go,False))
         }
 
     # Start processes as daemons

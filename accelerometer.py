@@ -71,7 +71,7 @@ class Accelerometer(object):
 
         return {"x": x, "y": y, "z": z}
 
-    def capture_x_seconds(self,seconds,gforce=True, apply_scaler=True,sample_frequency_hertz=500):
+    def capture_x_seconds(self,seconds,gforce=True, apply_scaler=True,sample_frequency_hertz=ACC_FREQUENCY_HZ):
         #TODO: Frequency doesn't really reflect the latency of the device, fix!
         frames = []
         tic = time.time()
