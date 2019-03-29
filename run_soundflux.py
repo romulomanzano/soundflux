@@ -19,10 +19,11 @@ def run(save_spectrograms=True):
 
     # Define processes
     processes = {
-        "sound_data_capturer":
+"""        "sound_data_capturer":
         Process(target=audio_capture_worker, args=(mic,sound_queue, go,)),
         "sound_feature_extractor":
         Process(target=extract_audio_features_worker, args=(sound_queue, go,True)),
+        """
         "acc_data_capturer":
         Process(target=vibration_capture_worker, args=(acc,accelerometer_queue, go,)),
         "acc_feature_extractor":
