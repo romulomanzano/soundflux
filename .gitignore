@@ -3,6 +3,8 @@ etc/
 .ipynb_checkpoints*
 __pycache__/*
 feed_files/*wav
+feed_files/*json
+feed_files/*png
 *.pyc
 .idea/
 lib/

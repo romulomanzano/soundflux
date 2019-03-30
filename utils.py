@@ -26,3 +26,19 @@ def get_files_with_mtime(path,file_extension):
     # leave only regular files, insert creation date
     entries = ((stat[ST_MTIME], path) for stat, path in entries if file_extension in path)
     return entries
+
+def get_generic_logger(name):
+    """
+    Get logger for functions
+    :param name: name of calling file
+    :return: object
+    """
+    # Set logger
+    FORMATTER = logging.Formatter('%(asctime)s %(name)-12s %(levelname)-8s %(message)s')
+    logger = logging.getLogger(name)
+    logger.setLevel(logging.INFO)
+    formatter = FORMATTER
+    handler = logging.StreamHandler()
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+    return logger
