@@ -52,7 +52,7 @@ def audio_capture_worker(mic, sound_queue, go):
 
 
 def extract_audio_features_worker(sound_queue, go, save_features, sample_rate=16000,
-                                  n_mels=128, n_fft=2048, inference_window=5, seconds_between_samples=0.4):
+                                  n_mels=128, n_fft=2048, inference_window=5, seconds_between_samples=0.8):
     """
     This function will enable continuous transformation of raw input to transformed features.
     It will return either a single timestep feature array, or a full nd array.
@@ -156,9 +156,10 @@ def inference_worker(inference_queue, go):
         # shift frames
         if go.value == 0 and inference_queue.empty():
             return
-        time.sleep(LIVE_FEED_SPECTROGRAM_WINDOW_SECONDS)
         details = inference_queue.get()
         now = details.get('timestamp')
+        logger.info('Inference triggered, will wait for a few seconds for audio samples to be processed - {}'.format(now))
+        time.sleep(LIVE_FEED_SPECTROGRAM_WINDOW_SECONDS*4)
         #move relevant files to live feed folder
         spectrograms = [f for f in listdir(LIVE_FEED_TARGET_FOLDER)
                  if isfile(os.path.join(LIVE_FEED_TARGET_FOLDER, f)) and (".png" in f)]
@@ -166,7 +167,7 @@ def inference_worker(inference_queue, go):
         for file in spectrograms:
             try:
                 timestamp = float(file[:13])
-                if abs(now - timestamp) >= LIVE_FEED_SPECTROGRAM_WINDOW_SECONDS*1000:
+                if abs(now - timestamp) <= LIVE_FEED_SPECTROGRAM_WINDOW_SECONDS*4000:
                     copyfile(os.path.join(LIVE_FEED_TARGET_FOLDER, file),
                              os.path.join(LIVE_FEED_INFERENCE_FOLDER,'unknown',file))
                     inference_files.append(file)
