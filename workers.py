@@ -119,7 +119,6 @@ def extract_vibration_features_worker(acc_queue, go, save_features, inference_qu
         # shift frames
         if len(frames) >= frames_in_window:
             frames = frames[frames_to_be_shifted:]
-        logger.info("Len for frames {}".format(len(frames)))
         for step in range(frames_to_be_shifted):
             if go.value == 0 and acc_queue.empty():
                 return
@@ -128,7 +127,6 @@ def extract_vibration_features_worker(acc_queue, go, save_features, inference_qu
 
         if len(frames) >= frames_in_window:
             now = dt.utcnow()
-            logger.info("Should save now")
             # check vibration thresholds
             max_x, max_y, max_z = 0, 0, 0
             for k in frames:
@@ -140,6 +138,7 @@ def extract_vibration_features_worker(acc_queue, go, save_features, inference_qu
                 vibration_file_name = LIVE_FEED_TARGET_FOLDER + "/{}_vibration.json".format(now.timestamp())
                 with open(vibration_file_name, 'w') as fp:
                     json.dump({'max_x': max_x, 'max_y': max_y, 'max_z': max_z}, fp)
+            logger.info("Acc read x, y, z: {}, {}, {}".format(round(max_x, 2), round(max_y, 2), round(max_z, 2)))
             if max(max_x, max_y, max_z) >= inference_threshold:
                 logger.info("Threshold of {} exceeded. Acc read x, y, z: {}, {}, {}".format(inference_threshold,
                                                                 round(max_x, 2), round(max_y, 2), round(max_z, 2)))
@@ -150,14 +149,15 @@ def extract_vibration_features_worker(acc_queue, go, save_features, inference_qu
 def inference_worker(inference_queue, go):
     #prep model
     inf = inference.SoundInference()
-    inference_folder = LIVE_FEED_INFERENCE_FOLDER
-
+    if not os.path.exists(LIVE_FEED_INFERENCE_FOLDER + "/"+'unknown'):
+        os.makedirs(LIVE_FEED_INFERENCE_FOLDER + "/"+'unknown')
+ 
     while True:
         # shift frames
         if go.value == 0 and inference_queue.empty():
             return
         now = dt.utcnow().timestamp()
-        time.sleep()
+        time.sleep(LIVE_FEED_SPECTROGRAM_WINDOW_SECONDS)
         details = inference_queue.get()
         #move relevant files to live feed folder
         spectrograms = [f for f in listdir(LIVE_FEED_TARGET_FOLDER)
@@ -168,20 +168,22 @@ def inference_worker(inference_queue, go):
                 timestamp = float(file[:16])
                 if abs(now - timestamp) >= LIVE_FEED_SPECTROGRAM_WINDOW_SECONDS:
                     copyfile(os.path.join(LIVE_FEED_TARGET_FOLDER, file),
-                             os.path.join(LIVE_FEED_INFERENCE_FOLDER, file))
+                             os.path.join(LIVE_FEED_INFERENCE_FOLDER,'unknown',file))
                     inference_files.append(file)
             except:
                 logger.info("Can't extract timestamp from filename: {}".format(file))
         #TODO: actually ping the server with results!
-        results = inf.predict_img_classes_from_folder(LIVE_FEED_INFERENCE_FOLDER)
+        #this will look for folders within the live feed folder, hence will finde the inference folder
+        results = inf.predict_img_classes_from_folder(LIVE_FEED_INFERENCE_FOLDER, batch = len(inference_files))
         for file in inference_files:
             try:
-                os.remove(os.path.join(LIVE_FEED_INFERENCE_FOLDER, file))
+                os.remove(os.path.join(LIVE_FEED_INFERENCE_FOLDER,'unknown', file))
             except:
                 logger.info("Can't remove file from {} : {}".format(file, LIVE_FEED_INFERENCE_FOLDER))
 
 def garbage_collection_worker(purge_older_than_n_seconds, go):
     while True:
+        file_ct = 0
         if go.value == 0:
             return
         now = dt.utcnow().timestamp()
@@ -193,6 +195,8 @@ def garbage_collection_worker(purge_older_than_n_seconds, go):
                 timestamp = float(file[:16])
                 if now - timestamp >= purge_older_than_n_seconds:
                     os.remove(os.path.join(LIVE_FEED_TARGET_FOLDER, file))
+                    file_ct +=1
             except:
                 logger.info("Can't extract timestamp from filename: {}".format(file))
+        logger.info("Garbage collector - removed a total of {} files".format(file_ct))
         time.sleep(purge_older_than_n_seconds)

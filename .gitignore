@@ -5,6 +5,7 @@ __pycache__/*
 feed_files/*wav
 feed_files/*json
 feed_files/*png
+feed_inference_files/*png
 *.pyc
 .idea/
 lib/

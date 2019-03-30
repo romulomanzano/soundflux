@@ -52,9 +52,10 @@ class SoundInference(object):
             mapped_results.append(r_map)
         return mapped_results
 
-    def predict_img_classes_from_folder(self, folder):
+    def predict_img_classes_from_folder(self, folder, batch=4):
+        self.logger.info('Looking for files in folder {}'.format(folder))
         generator = self._get_predict_generator(folder)
-        results = self.model.predict_generator(generator, 4, verbose=True)
+        results = self.model.predict_generator(generator, batch, verbose=True)
         mapped_results = self._map_inference_to_labels(results)
         self.logger.info('Inference results: {}'.format(mapped_results))
         return mapped_results
