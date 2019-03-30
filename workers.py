@@ -52,8 +52,7 @@ def audio_capture_worker(mic, sound_queue, go):
             return
 
 
-def extract_audio_features_worker(sound_queue, go, save_features, sample_rate=16000,
-                                  n_mels=128, n_fft=2048, inference_window=5, seconds_between_samples=0.4):
+def extract_audio_features_worker(sound_queue, go, inference_window=5, seconds_between_samples=0.4):
     """
     This function will enable continuous transformation of raw input to transformed features.
     It will return either a single timestep feature array, or a full nd array.
@@ -88,21 +87,6 @@ def extract_audio_features_worker(sound_queue, go, save_features, sample_rate=16
                 wave_file.setsampwidth(TARGET_FILE_SAMPLE_WIDTH)
                 wave_file.setframerate(MIC_RATE)
                 wave_file.writeframes(b''.join(frames))
-            # read from file
-            y, sr = soundfile.read(LIVE_FEED_TARGET_FOLDER + "/{}_recorded_sample.wav".format(file_timestamp))
-            # spectrogram
-            spec = extract_spectrogram(y, sample_rate=sr, n_mels=n_mels, n_fft=n_fft)
-            if save_features:
-                fig = plt.figure(figsize=(12, 4))
-                ax = plt.Axes(fig, [0., 0., 1., 1.])
-                ax.set_axis_off()
-                fig.add_axes(ax)
-                # getting spectrogram
-                specdisplay.specshow(spec, sr=sample_rate, x_axis='time', y_axis='mel')
-                # Saving PNG
-                plt.savefig(LIVE_FEED_TARGET_FOLDER + "/{}_mel_spectrogram.png".format(file_timestamp))
-                plt.close()
-
 
 def extract_vibration_features_worker(acc_queue, go, save_features, inference_queue,
                                       sample_frequency_hertz=ACC_FREQUENCY_HZ,
@@ -155,7 +139,7 @@ def extract_vibration_features_worker(acc_queue, go, save_features, inference_qu
                 if go.value == 0:
                     return
 
-def inference_worker(inference_queue, go):
+def inference_worker(inference_queue, go, n_mels=128, n_fft=2048):
     #prep model
     inf = inference.SoundInference()
     if not os.path.exists(LIVE_FEED_INFERENCE_FOLDER + "/"+'unknown'):
@@ -170,24 +154,38 @@ def inference_worker(inference_queue, go):
         logger.info('Inference triggered, will wait for a few seconds for audio samples to be processed - {}'.format(now))
         #wait until overlapping files are available
         while True:
-            spectrograms = [f for f in listdir(LIVE_FEED_TARGET_FOLDER)
-                            if isfile(os.path.join(LIVE_FEED_TARGET_FOLDER, f)) and (".png" in f)]
+            audio_samples = [f for f in listdir(LIVE_FEED_TARGET_FOLDER)
+                            if isfile(os.path.join(LIVE_FEED_TARGET_FOLDER, f)) and (".wav" in f)]
             #wait until files where the first frame was recorded x seconds after the vibration was detected are available
-            tail_spectrograms = [x for x in spectrograms
+            tail_audio_samples= [x for x in audio_samples
                                  if float(x[:13])-now >= LIVE_FEED_SPECTROGRAM_WINDOW_SECONDS*1000]
-            if tail_spectrograms:
+            if tail_audio_samples:
                 break
         #move relevant files to live feed folder
-        spectrograms = [f for f in listdir(LIVE_FEED_TARGET_FOLDER)
-                 if isfile(os.path.join(LIVE_FEED_TARGET_FOLDER, f)) and (".png" in f)]
+        audio_samples = [f for f in listdir(LIVE_FEED_TARGET_FOLDER)
+                 if isfile(os.path.join(LIVE_FEED_TARGET_FOLDER, f)) and (".wav" in f)]
         inference_files = []
-        for file in spectrograms:
+        for file in audio_samples:
             try:
                 timestamp = float(file[:13])
                 if abs(now - timestamp) <= LIVE_FEED_SPECTROGRAM_WINDOW_SECONDS*1000:
-                    copyfile(os.path.join(LIVE_FEED_TARGET_FOLDER, file),
-                             os.path.join(LIVE_FEED_INFERENCE_FOLDER,'unknown',file))
-                    inference_files.append(file)
+                    #Generate spectrogram!
+                    # read from file
+                    y, sr = soundfile.read(LIVE_FEED_TARGET_FOLDER + "/" + file)
+                    # spectrogram
+                    spec = extract_spectrogram(y, sample_rate=sr, n_mels=n_mels, n_fft=n_fft)
+                    fig = plt.figure(figsize=(12, 4))
+                    ax = plt.Axes(fig, [0., 0., 1., 1.])
+                    ax.set_axis_off()
+                    fig.add_axes(ax)
+                    # getting spectrogram
+                    specdisplay.specshow(spec, sr=sr, x_axis='time', y_axis='mel')
+                    # Saving PNG
+                    inference_file_name = \
+                        LIVE_FEED_INFERENCE_FOLDER+"/unknown" + "/{}_mel_spectrogram.png".format(timestamp)
+                    plt.savefig(inference_file_name)
+                    plt.close()
+                    inference_files.append(inference_file_name)
             except:
                 logger.info("Can't extract timestamp from filename: {}".format(file))
         #TODO: actually ping the server with results!
