@@ -51,8 +51,7 @@ def audio_capture_worker(mic, sound_queue, go):
         if go.value == 0:
             return
 
-
-def extract_audio_features_worker(sound_queue, go, inference_window=5, seconds_between_samples=0.4):
+def extract_audio_features_worker(sound_queue, go, inference_window=5, seconds_between_samples=1):
     """
     This function will enable continuous transformation of raw input to transformed features.
     It will return either a single timestep feature array, or a full nd array.
