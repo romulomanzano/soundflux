@@ -53,7 +53,7 @@ def audio_capture_worker(mic, sound_queue, go):
 
 
 def extract_audio_features_worker(sound_queue, go, save_features, sample_rate=16000,
-                                  n_mels=128, n_fft=2048, inference_window=5, seconds_between_samples=0.4):
+                                  n_mels=128, n_fft=2048, inference_window=5, seconds_between_samples=1):
     """
     This function will enable continuous transformation of raw input to transformed features.
     It will return either a single timestep feature array, or a full nd array.
