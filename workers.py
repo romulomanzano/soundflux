@@ -27,8 +27,9 @@ def vibration_capture_worker(acc, acc_queue, go, sample_frequency_hertz=ACC_FREQ
     :return: None
     """
     while True:
+        now = dt.utcnow().timestamp()*1000
         ax = acc.get_axes(gforce=gforce, apply_scaler=apply_scaler)
-        acc_queue.put(ax)
+        acc_queue.put((ax, now))
         time.sleep(1.0 / sample_frequency_hertz)
         if go.value == 0:
             return
@@ -44,9 +45,9 @@ def audio_capture_worker(mic, sound_queue, go):
     :return: None
     """
     while True:
-
+        now = dt.utcnow().timestamp()*1000
         l, data = mic.recorder.read()
-        sound_queue.put(data)
+        sound_queue.put((data, now))
         if go.value == 0:
             return
 
@@ -64,27 +65,31 @@ def extract_audio_features_worker(sound_queue, go, save_features, sample_rate=16
     """
     frames_in_window = int((MIC_RATE / MIC_PERIOD_SIZE_LIVE_FEED) * inference_window)
     frames = []
+    frames_timestamps = []
     frames_to_be_shifted = int((MIC_RATE / MIC_PERIOD_SIZE_LIVE_FEED) * seconds_between_samples)
     while True:
         # shift frames
         if len(frames) >= frames_in_window:
             frames = frames[frames_to_be_shifted:]
+            frames_timestamps = frames_timestamps [frames_to_be_shifted:]
         for step in range(frames_to_be_shifted):
             if go.value == 0 and sound_queue.empty():
                 return
             # compile enough samples to make a complete spectrogram for inference
-            frames.append(sound_queue.get())
+            frame, timestamp = sound_queue.get()
+            frames.append(frame)
+            frames_timestamps.append(timestamp)
         #extract if enough frames in the file
         if len(frames) >= frames_in_window:
-            now = dt.utcnow().timestamp()*1000
+            file_timestamp = frames_timestamps[0]
             # save wave
-            with wave.open(LIVE_FEED_TARGET_FOLDER + "/{}_recorded_sample.wav".format(now), 'wb') as wave_file:
+            with wave.open(LIVE_FEED_TARGET_FOLDER + "/{}_recorded_sample.wav".format(file_timestamp), 'wb') as wave_file:
                 wave_file.setnchannels(MIC_NUMBER_OF_CHANNELS)
                 wave_file.setsampwidth(TARGET_FILE_SAMPLE_WIDTH)
                 wave_file.setframerate(MIC_RATE)
                 wave_file.writeframes(b''.join(frames))
             # read from file
-            y, sr = soundfile.read(LIVE_FEED_TARGET_FOLDER + "/{}_recorded_sample.wav".format(now))
+            y, sr = soundfile.read(LIVE_FEED_TARGET_FOLDER + "/{}_recorded_sample.wav".format(file_timestamp))
             # spectrogram
             spec = extract_spectrogram(y, sample_rate=sr, n_mels=n_mels, n_fft=n_fft)
             if save_features:
@@ -95,7 +100,7 @@ def extract_audio_features_worker(sound_queue, go, save_features, sample_rate=16
                 # getting spectrogram
                 specdisplay.specshow(spec, sr=sample_rate, x_axis='time', y_axis='mel')
                 # Saving PNG
-                plt.savefig(LIVE_FEED_TARGET_FOLDER + "/{}_mel_spectrogram.png".format(now))
+                plt.savefig(LIVE_FEED_TARGET_FOLDER + "/{}_mel_spectrogram.png".format(file_timestamp))
                 plt.close()
 
 
@@ -114,19 +119,23 @@ def extract_vibration_features_worker(acc_queue, go, save_features, inference_qu
     """
     frames_in_window = int(sample_frequency_hertz * inference_window)
     frames = []
+    frames_timestamps = []
     frames_to_be_shifted = int(sample_frequency_hertz * seconds_between_samples)
     while True:
         # shift frames
         if len(frames) >= frames_in_window:
             frames = frames[frames_to_be_shifted:]
+            frames_timestamps = frames_timestamps[frames_to_be_shifted:]
         for step in range(frames_to_be_shifted):
             if go.value == 0 and acc_queue.empty():
                 return
             # compile enough samples to make a complete spectrogram for inference
-            frames.append(acc_queue.get())
+            frame, timestamp = acc_queue.get()
+            frames.append(frame)
+            frames_timestamps.append(timestamp)
 
         if len(frames) >= frames_in_window:
-            now = dt.utcnow().timestamp()*1000
+            file_timestamp = frames_timestamps[0]
             # check vibration thresholds
             max_x, max_y, max_z = 0, 0, 0
             for k in frames:
@@ -135,14 +144,14 @@ def extract_vibration_features_worker(acc_queue, go, save_features, inference_qu
                 max_y = max(abs(k.get('y', 0)), max_y)
                 max_z = max(abs(k.get('z', 0)), max_z)
             if save_features:
-                vibration_file_name = LIVE_FEED_TARGET_FOLDER + "/{}_vibration.json".format(now)
+                vibration_file_name = LIVE_FEED_TARGET_FOLDER + "/{}_vibration.json".format(file_timestamp)
                 with open(vibration_file_name, 'w') as fp:
                     json.dump({'max_x': max_x, 'max_y': max_y, 'max_z': max_z}, fp)
             logger.info("Acc read x, y, z: {}, {}, {}".format(round(max_x, 2), round(max_y, 2), round(max_z, 2)))
             if max(max_x, max_y, max_z) >= inference_threshold:
                 logger.info("Threshold of {} exceeded. Acc read x, y, z: {}, {}, {}".format(inference_threshold,
                                                                 round(max_x, 2), round(max_y, 2), round(max_z, 2)))
-                inference_queue.put({'timestamp': now, 'max_x': max_x, 'max_y': max_y, 'max_z': max_z})
+                inference_queue.put({'timestamp': file_timestamp, 'max_x': max_x, 'max_y': max_y, 'max_z': max_z})
                 if go.value == 0:
                     return
 
@@ -159,7 +168,15 @@ def inference_worker(inference_queue, go):
         details = inference_queue.get()
         now = details.get('timestamp')
         logger.info('Inference triggered, will wait for a few seconds for audio samples to be processed - {}'.format(now))
-        time.sleep(LIVE_FEED_SPECTROGRAM_WINDOW_SECONDS*4)
+        #wait until overlapping files are available
+        while True:
+            spectrograms = [f for f in listdir(LIVE_FEED_TARGET_FOLDER)
+                            if isfile(os.path.join(LIVE_FEED_TARGET_FOLDER, f)) and (".png" in f)]
+            #wait until files where the first frame was recorded x seconds after the vibration was detected are available
+            tail_spectrograms = [x for x in spectrograms
+                                 if float(x[:13])-now >= LIVE_FEED_SPECTROGRAM_WINDOW_SECONDS*1000]
+            if tail_spectrograms:
+                break
         #move relevant files to live feed folder
         spectrograms = [f for f in listdir(LIVE_FEED_TARGET_FOLDER)
                  if isfile(os.path.join(LIVE_FEED_TARGET_FOLDER, f)) and (".png" in f)]
@@ -167,7 +184,7 @@ def inference_worker(inference_queue, go):
         for file in spectrograms:
             try:
                 timestamp = float(file[:13])
-                if abs(now - timestamp) <= LIVE_FEED_SPECTROGRAM_WINDOW_SECONDS*4000:
+                if abs(now - timestamp) <= LIVE_FEED_SPECTROGRAM_WINDOW_SECONDS*1000:
                     copyfile(os.path.join(LIVE_FEED_TARGET_FOLDER, file),
                              os.path.join(LIVE_FEED_INFERENCE_FOLDER,'unknown',file))
                     inference_files.append(file)

@@ -31,7 +31,7 @@ def run():
         "acc_data_capturer": Process(target=vibration_capture_worker, args=(acc,accelerometer_queue, go,)),
         "acc_feature_extractor":
             Process(target=extract_vibration_features_worker, args=(accelerometer_queue, go, False,inference_queue)),
-        "garbage_collector_worker": Process(target=garbage_collection_worker,args=(60, go)),
+        "garbage_collector_worker": Process(target=garbage_collection_worker,args=(120, go)),
         "inference_worker" : Process(target=inference_worker,args=(inference_queue, go))
         }
 
