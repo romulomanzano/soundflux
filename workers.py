@@ -69,7 +69,7 @@ def extract_audio_features_worker(sound_queue, go, inference_window=5, seconds_b
         # shift frames
         if len(frames) >= frames_in_window:
             frames = frames[frames_to_be_shifted:]
-            frames_timestamps = frames_timestamps [frames_to_be_shifted:]
+            frames_timestamps = frames_timestamps[frames_to_be_shifted:]
         for step in range(frames_to_be_shifted):
             if go.value == 0 and sound_queue.empty():
                 return
