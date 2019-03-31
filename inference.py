@@ -6,6 +6,7 @@ from keras.models import model_from_json
 import json
 import utils
 import sys
+from notification import register_inference
 
 @utils.logged
 class SoundInference(object):
@@ -38,8 +39,8 @@ class SoundInference(object):
         gen = datagen.flow_from_directory(folder,
                              target_size=(self.img_height, self.img_width),
                              class_mode='categorical',
-                            batch_size=1)
-
+                            batch_size=1,
+                            shuffle=False)
         return gen
 
     def _map_inference_to_labels(self,results):
@@ -55,6 +56,7 @@ class SoundInference(object):
     def predict_img_classes_from_folder(self, folder, batch=4):
         self.logger.info('Looking for files in folder {}'.format(folder))
         generator = self._get_predict_generator(folder)
+        self.logger.info(generator.filenames)
         results = self.model.predict_generator(generator, batch, verbose=True)
         mapped_results = self._map_inference_to_labels(results)
         self.logger.info('Inference results: {}'.format(mapped_results))
