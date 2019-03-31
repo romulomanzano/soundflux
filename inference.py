@@ -49,8 +49,8 @@ class SoundInference(object):
         for i, item in enumerate(results):
             r_map = {}
             for k, v in map.items():
-                r_map[k] = item[v]
-                r_map['filename'] = filenames[i]
+                r_map[k] = float(item[v])
+            r_map['filename'] = filenames[i]
             mapped_results.append(r_map)
         return mapped_results
 
