@@ -12,7 +12,7 @@ from os import listdir
 from os.path import isfile
 import utils
 import inference
-from shutil import copyfile
+import notification
 
 logger = utils.get_generic_logger(__name__)
 
@@ -138,7 +138,7 @@ def extract_vibration_features_worker(acc_queue, go, save_features, inference_qu
                 if go.value == 0:
                     return
 
-def inference_worker(inference_queue, go, n_mels=128, n_fft=2048):
+def inference_worker(inference_queue, go, notify=False, n_mels=128, n_fft=2048):
     #prep model
     inf = inference.SoundInference()
     if not os.path.exists(LIVE_FEED_INFERENCE_FOLDER + "/"+'unknown'):
@@ -190,9 +190,18 @@ def inference_worker(inference_queue, go, n_mels=128, n_fft=2048):
                     inference_files.append(inference_file_name)
             except:
                 logger.info("Can't extract timestamp from filename: {}".format(file))
-        #TODO: actually ping the server with results!
         #this will look for folders within the live feed folder, hence will finde the inference folder
         results = inf.predict_img_classes_from_folder(LIVE_FEED_INFERENCE_FOLDER, batch = len(inference_files))
+        if notify:
+            #depending on the sensitivity defined
+            for prediction in results:
+                if (prediction['falling_dummy'] >= NOTIFICATION_PROBABILITY_TRESHOLD_DUMMY) or \
+                        (prediction['falling_object'] >= NOTIFICATION_PROBABILITY_TRESHOLD_OBJECT):
+                    now_datetime_str = dt.utcfromtimestamp(now/1000.0).strftime("%m/%d/%Y, %H:%M:%S")
+                    metadata = {'timestamp' : now_datetime_str}
+                    spec_location = LIVE_FEED_INFERENCE_FOLDER+"/"+prediction['filename']
+                    logger.info("Pinging SoundFlux server.")
+                    notification.register_inference(spec_location, metadata, prediction)
         for file in inference_files:
             try:
                 os.remove(file)

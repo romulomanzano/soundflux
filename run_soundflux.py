@@ -8,11 +8,12 @@ from accelerometer import Accelerometer
 from soundflux import SoundFlux
 from workers import *
 import utils
+import sys
 
 
 logger =utils.get_generic_logger(__name__)
 
-def run():
+def run(notify=False):
 
     # Instantiate Devices
     mic = SoundFlux(live_feed=True)
@@ -32,7 +33,7 @@ def run():
         "acc_feature_extractor":
             Process(target=extract_vibration_features_worker, args=(accelerometer_queue, go, False,inference_queue)),
         "garbage_collector_worker": Process(target=garbage_collection_worker,args=(120, go)),
-        "inference_worker" : Process(target=inference_worker,args=(inference_queue, go))
+        "inference_worker" : Process(target=inference_worker,args=(inference_queue, go, notify))
         }
 
     # Start processes as daemons
@@ -49,4 +50,9 @@ def run():
     logger.info("Pipeline complete!")
 
 if __name__ == '__main__':
-    run()
+    if len(sys.argv)<=1:
+        run()
+    else:
+        arg = sys.argv[1]
+        if arg == "notify_server":
+            run(notify=True)
