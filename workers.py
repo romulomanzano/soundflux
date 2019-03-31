@@ -164,6 +164,7 @@ def inference_worker(inference_queue, go, n_mels=128, n_fft=2048):
         audio_samples = [f for f in listdir(LIVE_FEED_TARGET_FOLDER)
                  if isfile(os.path.join(LIVE_FEED_TARGET_FOLDER, f)) and (".wav" in f)]
         inference_files = []
+        logger.info("Generating spectrograms.")
         for file in audio_samples:
             try:
                 timestamp = float(file[:13])
@@ -192,7 +193,7 @@ def inference_worker(inference_queue, go, n_mels=128, n_fft=2048):
         results = inf.predict_img_classes_from_folder(LIVE_FEED_INFERENCE_FOLDER, batch = len(inference_files))
         for file in inference_files:
             try:
-                os.remove(os.path.join(LIVE_FEED_INFERENCE_FOLDER,'unknown', file))
+                os.remove(file)
             except:
                 logger.info("Can't remove file from {} : {}".format(file, LIVE_FEED_INFERENCE_FOLDER))
 
