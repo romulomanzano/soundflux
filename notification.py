@@ -6,8 +6,20 @@ from utils import *
 
 logger = get_generic_logger(__name__)
 
-def register_inference(spectrogram_location, metadata, model_prediction):
+def register_inference(spectrogram_location, metadata, prediction):
     try:
+        idx = 1
+        model_prediction = {}
+        label = None
+        label_proba = 0
+        for k, v in prediction.items:
+            if k != 'filename':
+                model_prediction["class_{}_label".format(idx)] = k
+                model_prediction["class_{}_probability".format(idx)] = v
+                idx +=1
+                if v>label_proba:
+                    label = str(k)
+                    label_proba = float(v)
         #Upload to Target
         binary_data = open(spectrogram_location, 'rb').read()
         base64_bytes = base64.b64encode(binary_data)
@@ -20,6 +32,7 @@ def register_inference(spectrogram_location, metadata, model_prediction):
                 "time_order_desc" : -order_by_field
             },
             "sample_type" : "realtime_inference",
+            "label" : "{} - {}%".format(label, round(label_proba*100,1)),
             "model_prediction" : model_prediction,
             "spectrogram" : bstring
             },
