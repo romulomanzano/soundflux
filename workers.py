@@ -142,7 +142,10 @@ def extract_vibration_features_worker(acc_queue, go, save_features, inference_qu
 def inference_worker(inference_queue, go, notify=False, n_mels=128, n_fft=2048):
     #prep model
     inf = inference.SoundInference()
- 
+    logger.info("Cleaning inference folder from prior data...")
+    for di in listdir(LIVE_FEED_INFERENCE_FOLDER):
+        if os.path.isdir(os.path.join(LIVE_FEED_INFERENCE_FOLDER,di)):
+            shutil.rmtree(os.path.join(LIVE_FEED_INFERENCE_FOLDER,di))
     while True:
         # shift frames
         if go.value == 0 and inference_queue.empty():
