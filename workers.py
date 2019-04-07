@@ -206,7 +206,7 @@ def inference_worker(inference_queue, go, notify=False, n_mels=128, n_fft=2048):
                         (prediction['falling_object'] >= NOTIFICATION_PROBABILITY_TRESHOLD_OBJECT):
                     now_datetime_str = dt.utcfromtimestamp(now/1000.0).strftime("%m/%d/%Y, %H:%M:%S")
                     metadata = {'timestamp' : now_datetime_str}
-                    spec_location = temp_spectrogram_folder+"/"+prediction['filename']
+                    spec_location = inference_instance_folder+"/"+prediction['filename']
                     logger.info("Pinging SoundFlux server.")
                     notification.register_inference(spec_location, metadata, prediction)
         #for file in inference_files:
