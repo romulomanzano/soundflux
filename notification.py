@@ -12,7 +12,7 @@ def register_inference(spectrogram_location, metadata, prediction):
         model_prediction = {}
         label = None
         label_proba = 0
-        for k, v in prediction.items:
+        for k, v in prediction.items():
             if k != 'filename':
                 model_prediction["class_{}_label".format(idx)] = k
                 model_prediction["class_{}_probability".format(idx)] = v

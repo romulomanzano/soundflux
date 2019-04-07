@@ -13,6 +13,7 @@ from os.path import isfile
 import utils
 import inference
 import notification
+import shutil
 
 logger = utils.get_generic_logger(__name__)
 
@@ -51,7 +52,7 @@ def audio_capture_worker(mic, sound_queue, go):
         if go.value == 0:
             return
 
-def extract_audio_features_worker(sound_queue, go, inference_window=5, seconds_between_samples=0.8):
+def extract_audio_features_worker(sound_queue, go, inference_window=5, seconds_between_samples=1.0):
     """
     This function will enable continuous transformation of raw input to transformed features.
     It will return either a single timestep feature array, or a full nd array.
@@ -141,8 +142,6 @@ def extract_vibration_features_worker(acc_queue, go, save_features, inference_qu
 def inference_worker(inference_queue, go, notify=False, n_mels=128, n_fft=2048):
     #prep model
     inf = inference.SoundInference()
-    if not os.path.exists(LIVE_FEED_INFERENCE_FOLDER + "/"+'unknown'):
-        os.makedirs(LIVE_FEED_INFERENCE_FOLDER + "/"+'unknown')
  
     while True:
         # shift frames
@@ -165,12 +164,18 @@ def inference_worker(inference_queue, go, notify=False, n_mels=128, n_fft=2048):
                  if isfile(os.path.join(LIVE_FEED_TARGET_FOLDER, f)) and (".wav" in f)]
         inference_files = []
         logger.info("Generating spectrograms.")
+        #create temp folder for this specific inference
+        inference_instance_folder = LIVE_FEED_INFERENCE_FOLDER+"/{}".format(now)
+        temp_spectrogram_folder = inference_instance_folder+"/unknown"
+        if not os.path.exists(inference_instance_folder):
+            os.makedirs(inference_instance_folder)
+            os.makedirs(temp_spectrogram_folder)
         for file in audio_samples:
             try:
                 timestamp = float(file[:13])
-                #the data preceeding the vibration isn't as important (for now)
-                if (abs(now - timestamp) <= LIVE_FEED_SPECTROGRAM_WINDOW_SECONDS*1000) and \
-                    (now - timestamp) <= LIVE_FEED_SPECTROGRAM_WINDOW_SECONDS*250 :
+                #couple of secs preceeeding the inference, but not too long before
+                if ((now-timestamp) <= LIVE_FEED_SPECTROGRAM_WINDOW_SECONDS*1000) and \
+                    (now>timestamp+LIVE_FEED_SPECTROGRAM_WINDOW_SECONDS*500):
                     #Generate spectrogram!
                     # read from file
                     y, sr = soundfile.read(LIVE_FEED_TARGET_FOLDER + "/" + file)
@@ -183,15 +188,14 @@ def inference_worker(inference_queue, go, notify=False, n_mels=128, n_fft=2048):
                     # getting spectrogram
                     specdisplay.specshow(spec, sr=sr, x_axis='time', y_axis='mel')
                     # Saving PNG
-                    inference_file_name = \
-                        LIVE_FEED_INFERENCE_FOLDER+"/unknown" + "/{}_mel_spectrogram.png".format(timestamp)
+                    inference_file_name = temp_spectrogram_folder + "/{}_mel_spectrogram.png".format(timestamp)
                     plt.savefig(inference_file_name)
                     plt.close()
                     inference_files.append(inference_file_name)
             except:
                 logger.info("Can't extract timestamp from filename: {}".format(file))
         #this will look for folders within the live feed folder, hence will finde the inference folder
-        results = inf.predict_img_classes_from_folder(LIVE_FEED_INFERENCE_FOLDER, batch = len(inference_files))
+        results = inf.predict_img_classes_from_folder(inference_instance_folder, batch = len(inference_files))
         if notify:
             #depending on the sensitivity defined
             for prediction in results:
@@ -199,14 +203,14 @@ def inference_worker(inference_queue, go, notify=False, n_mels=128, n_fft=2048):
                         (prediction['falling_object'] >= NOTIFICATION_PROBABILITY_TRESHOLD_OBJECT):
                     now_datetime_str = dt.utcfromtimestamp(now/1000.0).strftime("%m/%d/%Y, %H:%M:%S")
                     metadata = {'timestamp' : now_datetime_str}
-                    spec_location = LIVE_FEED_INFERENCE_FOLDER+"/"+prediction['filename']
+                    spec_location = temp_spectrogram_folder+"/"+prediction['filename']
                     logger.info("Pinging SoundFlux server.")
                     notification.register_inference(spec_location, metadata, prediction)
-        for file in inference_files:
-            try:
-                os.remove(file)
-            except:
-                logger.info("Can't remove file from {} : {}".format(file, LIVE_FEED_INFERENCE_FOLDER))
+        #for file in inference_files:
+        try:
+            shutil.rmtree(inference_instance_folder)
+        except:
+            logger.info("Can't remove file from {} : {}".format(file, base_temp_spec_folder))
 
 def garbage_collection_worker(purge_older_than_n_seconds, go):
     while True:
