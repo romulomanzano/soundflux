@@ -46,7 +46,7 @@ def get_random_section_of_x_length(overlay_data, size):
     subset = overlay_data[start:start+size]
     return subset
 
-samples_folder = "/home/romulo/github/soundflux/samples"
+samples_folder = "/home/nvidia/github/soundflux/samples"
 
 metadata = [samples_folder+"/"+ f for f in listdir(samples_folder) if isfile(join(samples_folder, f)) and ".json" in f]
 
@@ -64,7 +64,7 @@ for fi in metadata:
 
 dataset = pd.DataFrame(data)
 
-target_folder = "/home/romulo/Documents/soundflux_augmented"
+target_folder = "/home/nvidia/Downloads/soundflux_augmented"
 
 split=True
 test_split = 0.20
@@ -85,7 +85,7 @@ def create_and_save_spectrogram(y,sr,target_file):
     plt.close()
 
 
-for index, row in dataset[341::].iterrows():
+for index, row in dataset[460::].iterrows():
     print("Transforming file {}".format(index))
     if not os.path.exists(target_folder + "/" + 'spectrograms'):
         os.makedirs(target_folder + "/" + 'spectrograms')
