@@ -67,3 +67,4 @@ ijson
 twilio
 keras
 pillow
+seaborn
