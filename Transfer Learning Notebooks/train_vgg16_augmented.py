@@ -120,7 +120,7 @@ test_generator = datagen.flow_from_directory(test_folder,
 #RESET WEIGHTS!!
 #model.load_weights('raw_model.h5')
 #Augment class weights!
-fall_dummy_class_weight = 3.0
+fall_dummy_class_weight = 1.0
 class_weight = {}
 for k,v in train_generator.class_indices.items():
     if k == "falling_dummy":
@@ -155,10 +155,10 @@ print(results)
 
 #save model
 
-model.save_weights('augmented_model_three_classes_unfrozen_layers_weighted_v2.h5')
+model.save_weights('augmented_model_three_classes_unfrozen_layers_weighted_v4.h5')
 model_json = model.to_json()
-with open("augmented_model_three_classes_unfrozen_layers_weighted_v2.json", "w") as json_file:
+with open("augmented_model_three_classes_unfrozen_layers_weighted_v4.json", "w") as json_file:
     json_file.write(model_json)
-with open("augmented_model_three_classes_unfrozen_layers_weighted_v2_class_indices.json", "w") as json_file:
+with open("augmented_model_three_classes_unfrozen_layers_weighted_v4_class_indices.json", "w") as json_file:
     train_generator.class_indices
     json_file.write(json.dumps(train_generator.class_indices))
