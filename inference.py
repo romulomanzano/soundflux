@@ -46,12 +46,20 @@ class SoundInference(object):
     def _map_inference_to_labels(self,results, filenames):
         map = dict(self.label_map)
         mapped_results = []
+        likely_class = None
+        likely_class_probability = 0
         for i, item in enumerate(results):
             r_map = {}
             for k, v in map.items():
-                r_map[k] = float(item[v])
+                proba = float(item[v])
+                r_map[k] = float(proba)
+                if (proba>likely_class_probability):
+                    likely_class = str(k)
+                    likely_class_probability = float(proba)
             r_map['filename'] = filenames[i]
             mapped_results.append(r_map)
+            self.logger.info("******Predicted Class: {} with {}% probability******" \
+                .format(likely_class, round(likely_class_probability*100,1)))
         return mapped_results
 
     def predict_img_classes_from_folder(self, folder, batch=4):
@@ -60,7 +68,7 @@ class SoundInference(object):
         filenames = list(generator.filenames)
         results = self.model.predict_generator(generator, batch, verbose=True)
         mapped_results = self._map_inference_to_labels(results, filenames)
-        self.logger.info('Inference results: {}'.format(mapped_results))
+        self.logger.info('Full inference results: {}'.format(mapped_results))
         return mapped_results
 
 
