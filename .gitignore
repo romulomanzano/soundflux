@@ -15,3 +15,5 @@ pyvenv.cfg
 share/
 .env
 .vscode/settings.json
+*temp_overlay.wav
+*where_we_are*

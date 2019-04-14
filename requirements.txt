@@ -1,3 +1,5 @@
+wheel
+seaborn
 cycler==0.10.0
 imageio
 kiwisolver==1.0.1
