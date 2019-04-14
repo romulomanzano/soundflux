@@ -10,6 +10,9 @@ import matplotlib.pyplot as plt
 import json
 from PIL import Image, ImageFile
 ImageFile.LOAD_TRUNCATED_IMAGES = True
+import numpy as np
+from sklearn.metrics import confusion_matrix, classification_report
+import pandas as pd
 
 def save_plots(history,target_file_acc,target_file_loss):
     # summarize history for accuracy
@@ -52,10 +55,9 @@ def show_plots(history):
 batch_size = 32
 img_height=80
 img_width = 256
-approx_fold_size = 9000
 
-train_folder = "/home/nvidia/Downloads/soundflux_augmented/spectrograms/split/train/"
-test_folder = "/home/nvidia/Downloads/soundflux_augmented/spectrograms/split/test/"
+train_folder = "/home/nvidia/Downloads/soundflux_augmented_250bps/spectrograms/split/train/"
+test_folder = "/home/nvidia/Downloads/soundflux_augmented_250bps/spectrograms/split/test/"
 
 
 datagen = ImageDataGenerator(rescale=1./255,
@@ -120,7 +122,7 @@ test_generator = datagen.flow_from_directory(test_folder,
 #RESET WEIGHTS!!
 #model.load_weights('raw_model.h5')
 #Augment class weights!
-fall_dummy_class_weight = 1.0
+fall_dummy_class_weight = 1.5
 class_weight = {}
 for k,v in train_generator.class_indices.items():
     if k == "falling_dummy":
@@ -132,10 +134,10 @@ print("Class weights: {}".format(class_weight))
 #Idea of the above is to generate class_weight = {0: 2.0, 1: 1.0, 2: 1.0}
 #
 history = model.fit_generator(train_generator,
-                          steps_per_epoch=approx_fold_size/batch_size,
+                          steps_per_epoch=np.ceil(len(train_generator.classes)/(2*batch_size)),
                           validation_data = test_generator,
-                          validation_steps = 1000/batch_size,
-                          epochs=10,
+                          validation_steps = np.ceil(len(test_generator.classes)/batch_size),
+                          epochs=6,
                           shuffle=True, 
                           verbose=True,
                           class_weight=class_weight)
@@ -148,17 +150,50 @@ test_generator = datagen.flow_from_directory(test_folder,
                                           shuffle=True,
                                           seed=7)
 
-results = model.evaluate_generator(test_generator,
-                              steps=1000/batch_size,
+predictions = model.predict_generator(test_generator,
+                              steps=np.ceil(len(test_generator.classes)/batch_size),
                               verbose=True)
-print(results)
+y_pred = np.argmax(predictions, axis=1)
+print('Confusion Matrix')
+cm = confusion_matrix(test_generator.classes, y_pred)
+normalized = cm/cm.sum(axis=1)[:, np.newaxis]
+print(normalized)
 
 #save model
-
-model.save_weights('augmented_model_three_classes_unfrozen_layers_weighted_v4.h5')
+#v1 no class weight, ran on the 20% overlay
+#v2 added 3x class weight on falling_dummy ran on the 20% overlay
+#v3 was essentially v2 but with a 2x class weight on falling_dummy ran on the 20% overlay
+#v4 will be with 35% overlay on source files
+#v5 will be with 25% overlay on source files
+#v6 is 20% overlay with 1.5 weight on dummy class
+#v7 same as v6 but with 250bps
+model.save_weights('augmented_model_three_classes_unfrozen_layers_weighted_v7.h5')
 model_json = model.to_json()
-with open("augmented_model_three_classes_unfrozen_layers_weighted_v4.json", "w") as json_file:
+with open("augmented_model_three_classes_unfrozen_layers_weighted_v7.json", "w") as json_file:
     json_file.write(model_json)
-with open("augmented_model_three_classes_unfrozen_layers_weighted_v4_class_indices.json", "w") as json_file:
+with open("augmented_model_three_classes_unfrozen_layers_weighted_v7_class_indices.json", "w") as json_file:
     train_generator.class_indices
     json_file.write(json.dumps(train_generator.class_indices))
+
+#evaluate on stress test
+stress_test_folder = "/home/nvidia/Downloads/soundflux_stress_testing/spectrograms/"
+stress_test_generator = datagen.flow_from_directory(stress_test_folder,
+                                          target_size = (img_height,img_width),
+                                          class_mode = 'categorical',
+                                          batch_size = batch_size,
+                                          shuffle=False, 
+                                          seed=7)
+
+stress_predictions = model.predict_generator(stress_test_generator,
+                              steps=np.ceil(len(stress_test_generator.classes)/batch_size),
+                              verbose=True)
+stress_y_pred = np.argmax(stress_predictions, axis=1)
+mapped_results = []
+for i in y_pred:
+    r_map = {}
+    for k, v in train_generator.class_indices.items():
+        if i == v:
+            mapped_results.append(str(k))
+            break
+print(np.mean([x=="falling_object" for x in mapped_results]))
+
