@@ -23,7 +23,7 @@ random.seed(7)
 n_mels = 128
 
 #amplitude of overlay as a percentage of the fall
-power_scale_overlay = 0.2
+power_scale_overlay = 0.25
 
 overlay_file_mapping = {'running_shower' : 'resampled_169659_shower.wav',
                'children_playing' : 'resampled_children_ambiance.wav',
@@ -46,7 +46,7 @@ def get_random_section_of_x_length(overlay_data, size):
     subset = overlay_data[start:start+size]
     return subset
 
-samples_folder = "/home/nvidia/github/soundflux/samples"
+samples_folder = "/home/romulo/github/soundflux/samples"
 
 metadata = [samples_folder+"/"+ f for f in listdir(samples_folder) if isfile(join(samples_folder, f)) and ".json" in f]
 
@@ -64,7 +64,7 @@ for fi in metadata:
 
 dataset = pd.DataFrame(data)
 
-target_folder = "/home/nvidia/Downloads/soundflux_augmented"
+target_folder = "/home/romulo/Documents/soundflux_augmented_250bps"
 
 split=True
 test_split = 0.20
@@ -83,9 +83,11 @@ def create_and_save_spectrogram(y,sr,target_file):
     #Saving PNG
     plt.savefig(target_file)
     plt.close()
+print("Number of unfiltered rows. {}".format(dataset.shape[0] ))
+dataset = dataset[dataset['class'].isin(["falling_dummy", "falling_object"])].reset_index()
+print("Number of filtered rows. {}".format(dataset.shape[0]))
 
-
-for index, row in dataset[460::].iterrows():
+for index, row in dataset[::].iterrows():
     print("Transforming file {}".format(index))
     if not os.path.exists(target_folder + "/" + 'spectrograms'):
         os.makedirs(target_folder + "/" + 'spectrograms')
