@@ -91,7 +91,8 @@ def extract_audio_features_worker(sound_queue, go, inference_window=5, seconds_b
 def extract_vibration_features_worker(acc_queue, go, save_features, inference_queue,
                                       sample_frequency_hertz=ACC_FREQUENCY_HZ,
                                       inference_window=1, seconds_between_samples=1,
-                                      inference_threshold = LIVE_FEED_INFERENCE_ACC_THRESHOLD):
+                                      inference_threshold = LIVE_FEED_INFERENCE_ACC_THRESHOLD,
+                                      skip_x_seconds_after_trigger=5):
     """
     This function will enable continuous transformation of raw input to transformed features.
     It will return either a single timestep feature array, or a full nd array.
@@ -105,6 +106,8 @@ def extract_vibration_features_worker(acc_queue, go, save_features, inference_qu
     frames = []
     frames_timestamps = []
     frames_to_be_shifted = int(sample_frequency_hertz * seconds_between_samples)
+    skip_due_to_recent_trigger = 0
+    cycles_to_skip_if_trigger = int(skip_x_seconds_after_trigger/(1.0*seconds_between_samples)) 
     while True:
         # shift frames
         if len(frames) >= frames_in_window:
@@ -119,6 +122,10 @@ def extract_vibration_features_worker(acc_queue, go, save_features, inference_qu
             frames_timestamps.append(timestamp)
 
         if len(frames) >= frames_in_window:
+            if skip_due_to_recent_trigger >0:
+                logger.info("Skipping cycle due to recent trigger")
+                skip_due_to_recent_trigger -=1
+                continue
             file_timestamp = frames_timestamps[0]
             # check vibration thresholds
             max_x, max_y, max_z = 0, 0, 0
@@ -136,6 +143,7 @@ def extract_vibration_features_worker(acc_queue, go, save_features, inference_qu
                 logger.info("Threshold of {} exceeded. Acc read x, y, z: {}, {}, {}".format(inference_threshold,
                                                                 round(max_x, 2), round(max_y, 2), round(max_z, 2)))
                 inference_queue.put({'timestamp': file_timestamp, 'max_x': max_x, 'max_y': max_y, 'max_z': max_z})
+                skip_due_to_recent_trigger = int(cycles_to_skip_if_trigger)
                 if go.value == 0:
                     return
 

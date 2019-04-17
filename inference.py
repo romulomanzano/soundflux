@@ -9,6 +9,7 @@ import json
 import utils
 import sys
 from notification import register_inference
+import math
 
 @utils.logged
 class SoundInference(object):
@@ -61,7 +62,7 @@ class SoundInference(object):
             r_map['filename'] = filenames[i]
             mapped_results.append(r_map)
             self.logger.info("******Predicted Class: {} with {}% probability******" \
-                .format(likely_class, round(likely_class_probability*100,1)))
+                .format(likely_class, round(math.floor(likely_class_probability*10000)/100,1)))
         return mapped_results
 
     def predict_img_classes_from_folder(self, folder, batch=4):
@@ -84,7 +85,7 @@ class SoundInference(object):
         self.logger.info('Running inference on image {}'.format(image_url))
         img_tensor = self.load_image(image_url)
         results = self.model.predict(img_tensor, verbose=True)
-        mapped_results = self._map_inference_to_labels(results)
+        mapped_results = self._map_inference_to_labels(results, [image_url])
         self.logger.info('Inference results: {}'.format(mapped_results))
         return mapped_results
 
