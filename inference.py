@@ -3,6 +3,8 @@ import tensorflow as tf
 from keras.backend.tensorflow_backend import set_session
 from keras.preprocessing.image import ImageDataGenerator
 from keras.models import model_from_json
+from keras.preprocessing import image
+import numpy as np
 import json
 import utils
 import sys
@@ -71,6 +73,20 @@ class SoundInference(object):
         self.logger.info('Full inference results: {}'.format(mapped_results))
         return mapped_results
 
+    def load_image(self, image_url):
+        img = image.load_img(image_url, target_size=(self.img_height, self.img_width))
+        img_tensor = image.img_to_array(img)  # (height, width, channels)
+        img_tensor = np.expand_dims(img_tensor, axis=0)  # (1, height, width, channels)
+        img_tensor /= 255.  # imshow expects values in the range [0, 1]
+        return img_tensor
+
+    def predict_image(self, image_url):
+        self.logger.info('Running inference on image {}'.format(image_url))
+        img_tensor = self.load_image(image_url)
+        results = self.model.predict(img_tensor, verbose=True)
+        mapped_results = self._map_inference_to_labels(results)
+        self.logger.info('Inference results: {}'.format(mapped_results))
+        return mapped_results
 
 if __name__ == '__main__':
     arg = sys.argv[1]
