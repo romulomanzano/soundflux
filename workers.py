@@ -92,7 +92,7 @@ def extract_vibration_features_worker(acc_queue, go, save_features, inference_qu
                                       sample_frequency_hertz=ACC_FREQUENCY_HZ,
                                       inference_window=1, seconds_between_samples=1,
                                       inference_threshold = LIVE_FEED_INFERENCE_ACC_THRESHOLD,
-                                      skip_x_seconds_after_trigger=5):
+                                      skip_x_seconds_after_trigger=ACC_SKIP_X_SECONDS_AFTER_TRIGGER):
     """
     This function will enable continuous transformation of raw input to transformed features.
     It will return either a single timestep feature array, or a full nd array.
