@@ -60,8 +60,7 @@ class SampleRecorder(object):
         toc = time.time()
         print("Time to finish {}".format(toc - tic))
 
-    def save_sample(self, prefix, _class_name, metadata={}):
-        base_path = './samples/'
+    def save_sample(self, prefix, _class_name, metadata={}, base_path='./samples/'):
         now = datetime.datetime.utcnow()
         id = str((now - datetime.datetime(1970, 1, 1)).total_seconds())
         base_file_name = "{}_id_{}".format(prefix, id)
