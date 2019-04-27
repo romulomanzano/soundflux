@@ -2,6 +2,8 @@
 
 ## Setup the Pi:
 - Open a terminal (or ssh into your Pi)
+- Install git:
+   * sudo apt-get install git
 - Create a directory called "/github/soundflux"
     * mkdir ~/github
     * mkdir ~/github/soundflux
