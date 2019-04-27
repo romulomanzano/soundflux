@@ -2,11 +2,13 @@
 
 ## Setup the Pi:
 - Open a terminal (or ssh into your Pi)
+- Install git:
+   * sudo apt-get install git
 - Create a directory called "/github/soundflux"
     * mkdir ~/github
     * mkdir ~/github/soundflux
 * Clone the git repo into it:
-    * git clone -b sfx-edge-pi --single-branch https://github.com/romulomanzano/soundflux.git ~/github/soundflux
+    * git clone -b sfx-edge-pi --single-branch --depth 1 https://github.com/romulomanzano/soundflux.git ~/github/soundflux
 * Go to that directory and run the setup_pi script:
     * cd ~/github/soundflux
     * chmod +x setup_pi.sh
