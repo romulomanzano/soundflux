@@ -4,6 +4,7 @@ sudo apt-get upgrade
 mkdir ~/github/respeaker
 git clone https://github.com/respeaker/seeed-voicecard.git ~/github/respeaker
 cd ~/github/respeaker/seeed-voicecard
+chmod +x setup_pi.sh
 sudo ./install.sh
 amixer cset numid=3 1
 sudo reboot now
