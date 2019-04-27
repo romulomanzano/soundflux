@@ -1,3 +1,0 @@
-# Note
-
-A notebook to run VGG16 was created but never version controlled. The outcome of this notebook was a VGG16 pre-trained model on ImageNet that was retrained (from layers 11 onwards) on the urbansound (10 class) spectrogram dataset. The main idea is to at some point retrain (second time) the model on the final soundflux data hoping to leverage the learnings on a large corpora of spectrograms. The resulting model definition is available here: https://s3.amazonaws.com/soundflux-urbansounds/vgg16_deep_unfrozen_urbansounds_data.zip

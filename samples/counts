@@ -1,2 +1,0 @@
-ls -l randy*.wav | wc -l
-ls -l neg*.wav | wc -l
