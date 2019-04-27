@@ -5,7 +5,6 @@
 - Create a directory called "/github/soundflux"
     * mkdir ~/github
     * mkdir ~/github/soundflux
-    * cd ~/github/soundflux
 * Clone the git repo into it:
     * git clone -b sfx-edge-pi --single-branch https://github.com/romulomanzano/soundflux.git ~/github/soundflux
 * Go to that directory and run the setup_pi script:
