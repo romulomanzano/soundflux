@@ -7,8 +7,9 @@ sudo apt install libblas-dev llvm
 sudo apt install vim
 sudo apt-get install sox
 sudo apt-get install libatlas-base-dev
+sudo apt-get install python3-pip
 #install virtualenv
-sudo pip3 install virtualenv
+python3 -m pip install virtualenv
 #
 mkdir ~/github/python_environments
 mkdir ~/github/python_environments/soundflux
@@ -16,5 +17,5 @@ mkdir ~/github/python_environments/soundflux
 python3 -m venv ~/github/python_environments/soundflux
 source ~/github/python_environments/soundflux/bin/activate
 #install requirements
-pip3 install --upgrade pip
-pip3 install -r requirements.txt
+pip install --upgrade pip
+pip install -r requirements_pi.txt
