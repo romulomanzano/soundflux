@@ -5,6 +5,7 @@ sudo apt-get install libasound2-dev
 sudo apt-get install libhdf5-serial-dev
 sudo apt install libblas-dev llvm
 sudo apt install vim
+sudo apt-get install zip
 sudo apt-get install sox
 sudo apt-get install libatlas-base-dev
 sudo apt-get install python3-pip
