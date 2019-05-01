@@ -8,9 +8,7 @@ sudo apt install vim
 sudo apt-get install zip
 sudo apt-get install sox
 sudo apt-get install libatlas-base-dev
-#install virtualenv
-python3.7 -m pip install virtualenv
-#
+#create virtual environment
 mkdir ~/github/python_environments
 mkdir ~/github/python_environments/soundflux
 #create python virtual environment
