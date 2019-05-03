@@ -1,3 +1,7 @@
+# increase swap space, this is good practice but also needed to install scipy
+sudo /bin/dd if=/dev/zero of=/var/swap.1 bs=1M count=1024
+sudo /sbin/mkswap /var/swap.1
+sudo /sbin/swapon /var/swap.1
 #make sure necessary libraries are there
 sudo apt-get install libasound2
 # in ubuntu you may need to install via aptitude and downgrade sudo apt-get install aptitude
