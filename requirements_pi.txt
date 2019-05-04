@@ -16,3 +16,4 @@ python-dotenv
 requests
 keras
 pydot
+pillow
