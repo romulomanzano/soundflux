@@ -16,7 +16,7 @@ sudo apt-get install libatlas-base-dev
 mkdir ~/github/python_environments
 mkdir ~/github/python_environments/soundflux
 #create python virtual environment
-python3.7 -m venv ~/github/python_environments/soundflux
+python3 -m venv ~/github/python_environments/soundflux
 source ~/github/python_environments/soundflux/bin/activate
 #install requirements
 pip install --upgrade pip
