@@ -12,6 +12,7 @@ sudo apt install vim
 sudo apt-get install zip
 sudo apt-get install sox
 sudo apt-get install python3-pip
+sudo apt-get install python3-venv
 sudo apt-get install libatlas-base-dev
 #create virtual environment
 mkdir ~/github/python_environments
