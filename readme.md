@@ -15,10 +15,6 @@
     * ./setup_pi.sh
  
 ## Setup for specific hardware configurations:
-    * ./setup_pi_and_respeaker.sh
-
- **Alternatively:** You can run each individual script by itself
-    
     * ./setup_pi.sh
     * ./setup_respeaker_4.sh
 
