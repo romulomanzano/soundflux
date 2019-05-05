@@ -12,8 +12,6 @@
 * Go to that directory and run the setup_pi script:
     * cd ~/github/soundflux
     * chmod +x setup_pi.sh
-    * chmod +x setup_python37.sh
-    * ./setup_python37.sh
     * ./setup_pi.sh
  
 ## Setup for specific hardware configurations:
